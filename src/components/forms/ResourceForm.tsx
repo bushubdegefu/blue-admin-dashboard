@@ -159,7 +159,7 @@ export function ResourceForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {scopes.map((scope) => (
                       <SelectItem key={scope.id} value={scope.id}>
                         {scope.name}

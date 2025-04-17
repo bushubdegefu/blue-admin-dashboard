@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { createColumnHelper } from "@tanstack/react-table"; // Added import
 import { Trash2, Plus, ExternalLink } from "lucide-react";
 import { Resource, TableColumn, FilterOption } from "@/types";
 import { getResources, deleteResource } from "@/services/mockService";
