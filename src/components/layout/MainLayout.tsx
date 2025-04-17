@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -52,7 +53,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           </div>
         </div>
         <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {children}
+          {children || <Outlet />}
         </div>
       </main>
     </div>

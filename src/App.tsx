@@ -49,7 +49,10 @@ const App = () => (
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
+              <Route element={<MainLayout>
+                {/* This children prop is required by MainLayoutProps */}
+                <p>Layout wrapper</p>
+              </MainLayout>}>
                 <Route path="/" element={<Dashboard />} />
                 
                 {/* Users Routes */}

@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Lock, User } from "lucide-react";
+import { LoginCredentials } from "@/services/authService";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -26,7 +26,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -40,7 +39,11 @@ const LoginPage = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await login(values);
+      // Ensure we're providing both required fields to the login function
+      await login({
+        username: values.username,
+        password: values.password
+      });
       // Auth context will handle the redirect
     } catch (error) {
       console.error("Login error:", error);

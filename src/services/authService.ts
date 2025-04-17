@@ -1,10 +1,10 @@
 
 import { toast } from "sonner";
 
-// Define base API URL
-const API_BASE_URL = "http://localhost:7500";
+// Define base API URL to match the server
+const API_BASE_URL = "http://localhost:7500/api/v1";
 
-// Types for authentication
+// Types for authentication based on swagger definitions
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -22,13 +22,20 @@ export interface AuthState {
   user: any | null;
 }
 
+// Common response type based on swagger definitions
+interface ResponseHTTP<T = any> {
+  data: T;
+  details: string;
+  success: boolean;
+}
+
 // Function to handle API errors
 const handleApiError = (error: any) => {
   console.error("API Error:", error);
   let errorMessage = "An unexpected error occurred";
   
   if (error.response) {
-    errorMessage = error.response.data?.message || "Server error";
+    errorMessage = error.response.data?.details || "Server error";
   } else if (error.request) {
     errorMessage = "No response from server";
   } else {
@@ -62,12 +69,8 @@ export const getTokens = (): { token: string | null, refreshToken: string | null
 // In real implementation, this would call the actual login endpoint
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
   try {
-    // In a real implementation, this would be an actual API call
-    // const response = await fetch(`${API_BASE_URL}/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(credentials)
-    // });
+    // For now, we'll use mock login since we don't have the actual login API endpoint specified
+    // In a real implementation, this would be an actual API call to the auth endpoint
     
     // Mock successful login
     if (credentials.username === "admin" && credentials.password === "password") {
@@ -79,13 +82,20 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
       // Save tokens to localStorage
       saveTokens(mockResponse.token, mockResponse.refreshToken);
       
-      // Save basic user info
+      // Save basic user info that matches the UserGet model
       localStorage.setItem("user", JSON.stringify({
         id: 1,
+        uuid: "mock-uuid-" + Math.random().toString(36).substring(2),
         username: credentials.username,
         email: "admin@example.com",
         first_name: "Admin",
-        last_name: "User"
+        last_name: "User",
+        middle_name: "",
+        disabled: false,
+        date_registered: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        last_login: new Date().toISOString()
       }));
       
       return mockResponse;
@@ -118,11 +128,12 @@ export const getCurrentUser = () => {
   return null;
 };
 
-// API request with authentication
+// API request with authentication that matches the API structure
 export const authenticatedRequest = async (
   endpoint: string, 
   method: string = 'GET', 
-  body?: any
+  body?: any,
+  queryParams?: Record<string, string | number>
 ) => {
   const { token, refreshToken } = getTokens();
   
@@ -139,6 +150,16 @@ export const authenticatedRequest = async (
     headers['X-REFRESH-TOKEN'] = refreshToken;
   }
   
+  // Build URL with query params if provided
+  let url = `${API_BASE_URL}${endpoint}`;
+  if (queryParams) {
+    const params = new URLSearchParams();
+    Object.entries(queryParams).forEach(([key, value]) => {
+      params.append(key, String(value));
+    });
+    url += `?${params.toString()}`;
+  }
+  
   const options: RequestInit = {
     method,
     headers,
@@ -146,7 +167,7 @@ export const authenticatedRequest = async (
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const response = await fetch(url, options);
     
     if (!response.ok) {
       if (response.status === 401) {
@@ -157,7 +178,7 @@ export const authenticatedRequest = async (
       }
       
       const errorData = await response.json();
-      throw new Error(errorData.message || "API request failed");
+      throw new Error(errorData.details || "API request failed");
     }
     
     return await response.json();
