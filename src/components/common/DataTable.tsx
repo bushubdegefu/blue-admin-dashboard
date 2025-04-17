@@ -1,0 +1,297 @@
+
+import { useState, useMemo } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  getPaginationRowModel,
+  PaginationState,
+  getFilteredRowModel,
+  FilterFn,
+  ColumnFiltersState,
+} from "@tanstack/react-table";
+import { useReactTable } from "@tanstack/react-table";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Search, 
+  X,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight 
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FilterOption } from "@/types";
+import { cn } from "@/lib/utils";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue, 
+} from "@/components/ui/select";
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  filterOptions?: FilterOption[];
+  searchPlaceholder?: string;
+}
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  filterOptions = [],
+  searchPlaceholder = "Search...",
+}: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: setPagination,
+    state: {
+      sorting,
+      globalFilter,
+      columnFilters,
+      pagination,
+    },
+  });
+
+  const handleFilterChange = (field: string, value: string) => {
+    if (!value) {
+      const newFilters = { ...activeFilters };
+      delete newFilters[field];
+      setActiveFilters(newFilters);
+      table.getColumn(field)?.setFilterValue(undefined);
+    } else {
+      setActiveFilters({ ...activeFilters, [field]: value });
+      table.getColumn(field)?.setFilterValue(value);
+    }
+  };
+
+  const clearFilter = (field: string) => {
+    const newFilters = { ...activeFilters };
+    delete newFilters[field];
+    setActiveFilters(newFilters);
+    table.getColumn(field)?.setFilterValue(undefined);
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({});
+    table.resetColumnFilters();
+    setGlobalFilter("");
+  };
+
+  const hasActiveFilters = Object.keys(activeFilters).length > 0 || globalFilter;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder={searchPlaceholder}
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-9"
+          />
+          {globalFilter && (
+            <button
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              onClick={() => setGlobalFilter("")}
+            >
+              <X className="h-4 w-4 text-gray-500" />
+            </button>
+          )}
+        </div>
+        {filterOptions.length > 0 && (
+          <Select 
+            onValueChange={(value) => {
+              if (!value) return;
+              const [field, filterValue] = value.split('::');
+              handleFilterChange(field, filterValue);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by..." />
+            </SelectTrigger>
+            <SelectContent>
+              {filterOptions.map((option) => (
+                option.type === 'select' && option.options ? (
+                  option.options.map((opt) => (
+                    <SelectItem 
+                      key={`${option.field}::${opt.value}`} 
+                      value={`${option.field}::${opt.value}`}
+                    >
+                      {option.label}: {opt.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem 
+                    key={option.field} 
+                    value={option.field}
+                  >
+                    {option.label}
+                  </SelectItem>
+                )
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {hasActiveFilters && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="text-sm font-medium text-gray-500">Active filters:</div>
+          {globalFilter && (
+            <div className="px-3 py-1 text-xs rounded-full bg-admin-100 text-admin-800 flex items-center">
+              <span>Search: {globalFilter}</span>
+              <button onClick={() => setGlobalFilter("")} className="ml-2">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+          {Object.entries(activeFilters).map(([field, value]) => (
+            <div 
+              key={field} 
+              className="px-3 py-1 text-xs rounded-full bg-admin-100 text-admin-800 flex items-center"
+            >
+              <span>
+                {filterOptions.find(f => f.field === field)?.label || field}: {value}
+              </span>
+              <button onClick={() => clearFilter(field)} className="ml-2">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={clearAllFilters}
+            className="text-xs text-gray-500"
+          >
+            Clear all
+          </Button>
+        </div>
+      )}
+
+      <div className="border rounded-lg overflow-hidden bg-white">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full data-table">
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className="whitespace-nowrap">
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={cn(
+                            "flex items-center gap-1",
+                            header.column.getCanSort() && "cursor-pointer select-none"
+                          )}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {{
+                            asc: <ChevronUp className="ml-1 h-4 w-4" />,
+                            desc: <ChevronDown className="ml-1 h-4 w-4" />,
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="py-6 text-center text-gray-500">
+                    No results found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="border-t px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <span>
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
+            <span>
+              | Showing {table.getRowModel().rows.length} of {data.length} records
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
