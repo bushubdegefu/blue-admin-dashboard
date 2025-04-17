@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Globe, Trash2, Plus } from "lucide-react";
-import { App, TableColumn, FilterOption } from "@/types";
+import { Eye, Trash2, Plus } from "lucide-react";
+import { App as AppType, TableColumn, FilterOption } from "@/types";
 import { getApps, deleteApp } from "@/services/mockService";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -14,9 +12,9 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 
 const AppsPage = () => {
-  const [apps, setApps] = useState<App[]>([]);
+  const [apps, setApps] = useState<AppType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [appToDelete, setAppToDelete] = useState<App | null>(null);
+  const [appToDelete, setAppToDelete] = useState<AppType | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -51,9 +49,9 @@ const AppsPage = () => {
     }
   };
 
-  const columnHelper = createColumnHelper<App>();
+  const columnHelper = createColumnHelper<AppType>();
   
-  const columns: TableColumn<App>[] = [
+  const columns: TableColumn<AppType>[] = [
     {
       header: "Name",
       accessorKey: "name",

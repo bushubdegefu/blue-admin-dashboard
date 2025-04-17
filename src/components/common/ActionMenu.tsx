@@ -1,49 +1,65 @@
 
-import { DotsHorizontalIcon } from "@radix-ui/react-icons";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { MoreVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export interface ActionItem {
+type ActionItem = {
   label: string;
   onClick: () => void;
-  icon?: ReactNode;
-  variant?: "default" | "destructive";
-}
+  icon?: React.ReactNode;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  disabled?: boolean;
+};
 
 interface ActionMenuProps {
   actions: ActionItem[];
+  trigger?: React.ReactNode;
+  className?: string;
 }
 
-export function ActionMenu({ actions }: ActionMenuProps) {
+export const ActionMenu = ({
+  actions,
+  trigger,
+  className,
+}: ActionMenuProps) => {
+  if (actions.length === 0) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <DotsHorizontalIcon className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
+        {trigger || (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("h-8 w-8", className)}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[160px]">
+      <DropdownMenuContent align="end">
         {actions.map((action, index) => (
           <DropdownMenuItem
             key={index}
-            onClick={(e) => {
-              e.preventDefault();
-              action.onClick();
-            }}
-            className={action.variant === "destructive" ? "text-red-600" : ""}
+            onClick={action.onClick}
+            disabled={action.disabled}
+            className={cn(
+              "flex items-center cursor-pointer",
+              action.variant === "destructive" && "text-destructive"
+            )}
           >
-            {action.icon && <span className="mr-2">{action.icon}</span>}
+            {action.icon}
             {action.label}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};

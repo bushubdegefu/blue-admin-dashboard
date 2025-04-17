@@ -1,5 +1,4 @@
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -9,10 +8,9 @@ import {
   getPaginationRowModel,
   PaginationState,
   getFilteredRowModel,
-  FilterFn,
   ColumnFiltersState,
+  useReactTable
 } from "@tanstack/react-table";
-import { useReactTable } from "@tanstack/react-table";
 import { 
   ChevronDown, 
   ChevronUp, 
