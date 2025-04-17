@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Lock, User } from "lucide-react";
-import { LoginCredentials } from "@/services/authService";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -39,12 +38,11 @@ const LoginPage = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Ensure we're providing both required fields to the login function
       await login({
         username: values.username,
         password: values.password
       });
-      // Auth context will handle the redirect
+      // Auth context will handle the redirect and toast notifications
     } catch (error) {
       console.error("Login error:", error);
       // Error is handled by the auth context
@@ -135,6 +133,9 @@ const LoginPage = () => {
               <p className="text-gray-500">
                 Demo credentials: <br />
                 Username: <span className="font-semibold">admin</span>, Password: <span className="font-semibold">password</span>
+              </p>
+              <p className="text-gray-400 text-xs mt-2">
+                Connects to localhost:7500/api/v1 - Falls back to mock login if server is unavailable
               </p>
             </div>
           </form>

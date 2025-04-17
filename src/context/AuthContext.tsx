@@ -3,10 +3,11 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { isAuthenticated, login, logout, LoginCredentials, getTokens, getCurrentUser } from '@/services/authService';
+import { User } from '@/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
@@ -23,7 +24,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isUserAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
@@ -46,11 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleLogin = async (credentials: LoginCredentials) => {
     try {
-      await login(credentials);
-      setIsAuthenticated(true);
-      setUser(getCurrentUser());
-      toast.success('Login successful');
-      navigate('/');
+      const response = await login(credentials);
+      
+      if (response.success) {
+        setIsAuthenticated(true);
+        setUser(response.data.user);
+        toast.success('Login successful');
+        navigate('/');
+      } else {
+        toast.error(response.details || 'Login failed');
+        setIsAuthenticated(false);
+        setUser(null);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
       setIsAuthenticated(false);

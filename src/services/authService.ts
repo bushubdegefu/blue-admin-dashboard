@@ -1,33 +1,9 @@
 
 import { toast } from "sonner";
+import { LoginCredentials, LoginResponse, User } from "@/types";
 
 // Define base API URL to match the server
 const API_BASE_URL = "http://localhost:7500/api/v1";
-
-// Types for authentication based on swagger definitions
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  refreshToken: string;
-}
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  token: string | null;
-  refreshToken: string | null;
-  user: any | null;
-}
-
-// Common response type based on swagger definitions
-interface ResponseHTTP<T = any> {
-  data: T;
-  details: string;
-  success: boolean;
-}
 
 // Function to handle API errors
 const handleApiError = (error: any) => {
@@ -65,25 +41,57 @@ export const getTokens = (): { token: string | null, refreshToken: string | null
   };
 };
 
-// Mock login for development
-// In real implementation, this would call the actual login endpoint
-export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+// Login implementation
+export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    // For now, we'll use mock login since we don't have the actual login API endpoint specified
-    // In a real implementation, this would be an actual API call to the auth endpoint
+    // For real implementation with the API:
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Login failed');
+    }
+
+    const responseData: LoginResponse = await response.json();
     
+    if (responseData.success && responseData.data) {
+      // Save tokens to localStorage
+      saveTokens(responseData.data.token, responseData.data.refresh_token);
+      
+      // Save user info
+      localStorage.setItem("user", JSON.stringify(responseData.data.user));
+      
+      return responseData;
+    } else {
+      throw new Error(responseData.details || 'Login failed');
+    }
+  } catch (error: any) {
+    // If API is unreachable, fall back to mock login
+    if (error.message === 'Failed to fetch' || error.message.includes('connect')) {
+      console.warn('API server unreachable, falling back to mock login');
+      return mockLogin(credentials);
+    }
+    
+    return handleApiError(error);
+  }
+};
+
+// Mock login for development/fallback
+const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
+  return new Promise((resolve, reject) => {
     // Mock successful login
     if (credentials.username === "admin" && credentials.password === "password") {
-      const mockResponse = {
-        token: "mock-token-" + Math.random().toString(36).substring(2),
-        refreshToken: "mock-refresh-token-" + Math.random().toString(36).substring(2)
-      };
+      const mockToken = "mock-token-" + Math.random().toString(36).substring(2);
+      const mockRefreshToken = "mock-refresh-token-" + Math.random().toString(36).substring(2);
       
-      // Save tokens to localStorage
-      saveTokens(mockResponse.token, mockResponse.refreshToken);
-      
-      // Save basic user info that matches the UserGet model
-      localStorage.setItem("user", JSON.stringify({
+      // Mock user that matches the UserGet model
+      const mockUser: User = {
         id: 1,
         uuid: "mock-uuid-" + Math.random().toString(36).substring(2),
         username: credentials.username,
@@ -96,15 +104,29 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         last_login: new Date().toISOString()
-      }));
+      };
       
-      return mockResponse;
+      // Save tokens to localStorage
+      saveTokens(mockToken, mockRefreshToken);
+      
+      // Save user info
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      
+      const mockResponse: LoginResponse = {
+        data: {
+          token: mockToken,
+          refresh_token: mockRefreshToken,
+          user: mockUser
+        },
+        details: "Mock login successful",
+        success: true
+      };
+      
+      resolve(mockResponse);
     } else {
-      throw new Error("Invalid credentials");
+      reject(new Error("Invalid username or password"));
     }
-  } catch (error) {
-    return handleApiError(error);
-  }
+  });
 };
 
 export const logout = () => {
@@ -116,7 +138,7 @@ export const isAuthenticated = (): boolean => {
   return token !== null;
 };
 
-export const getCurrentUser = () => {
+export const getCurrentUser = (): User | null => {
   const userString = localStorage.getItem("user");
   if (userString) {
     try {
