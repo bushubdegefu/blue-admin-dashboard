@@ -3,8 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import MainLayout from "./components/layout/MainLayout";
+import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 
@@ -39,37 +42,48 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <MainLayout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
             
-            {/* Users Routes */}
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/users/:id" element={<UserDetailsPage />} />
-            <Route path="/users/new" element={<NewUserPage />} />
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Dashboard />} />
+                
+                {/* Users Routes */}
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/users/:id" element={<UserDetailsPage />} />
+                <Route path="/users/new" element={<NewUserPage />} />
+                
+                {/* Groups Routes */}
+                <Route path="/groups" element={<GroupsPage />} />
+                <Route path="/groups/:id" element={<GroupDetailsPage />} />
+                <Route path="/groups/new" element={<NewGroupPage />} />
+                
+                {/* Scopes Routes */}
+                <Route path="/scopes" element={<ScopesPage />} />
+                <Route path="/scopes/:id" element={<ScopeDetailsPage />} />
+                <Route path="/scopes/new" element={<NewScopePage />} />
+                
+                {/* Resources Routes */}
+                <Route path="/resources" element={<ResourcesPage />} />
+                <Route path="/resources/new" element={<NewResourcePage />} />
+                
+                {/* Apps Routes */}
+                <Route path="/apps" element={<AppsPage />} />
+                <Route path="/apps/new" element={<NewAppPage />} />
+              </Route>
+            </Route>
             
-            {/* Groups Routes */}
-            <Route path="/groups" element={<GroupsPage />} />
-            <Route path="/groups/:id" element={<GroupDetailsPage />} />
-            <Route path="/groups/new" element={<NewGroupPage />} />
-            
-            {/* Scopes Routes */}
-            <Route path="/scopes" element={<ScopesPage />} />
-            <Route path="/scopes/:id" element={<ScopeDetailsPage />} />
-            <Route path="/scopes/new" element={<NewScopePage />} />
-            
-            {/* Resources Routes */}
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/resources/new" element={<NewResourcePage />} />
-            
-            {/* Apps Routes */}
-            <Route path="/apps" element={<AppsPage />} />
-            <Route path="/apps/new" element={<NewAppPage />} />
+            {/* Redirect root to dashboard when logged in */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Catch-all route for 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </MainLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
