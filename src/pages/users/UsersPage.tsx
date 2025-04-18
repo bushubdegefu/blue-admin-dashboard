@@ -10,26 +10,42 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
 import { formatDate } from "@/lib/utils";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const data = await getUsers();
+  //       setUsers(data);
+  //     } catch (error) {
+  //       console.error("Error fetching users:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchUsers();
-  }, []);
+  //   fetchUsers();
+  // }, []);
+    // API query with filters
+    const { 
+      data: usersResponse, 
+      isLoading, 
+      isError, 
+      error,
+      refetch
+    } = useQuery({
+      queryKey: ['users', page, pageSize, filters],
+      queryFn: () => userService.getUsers({
+        page,
+        size: pageSize,
+        ...filters
+      })
+    });
 
   const columnHelper = createColumnHelper<User>();
   
