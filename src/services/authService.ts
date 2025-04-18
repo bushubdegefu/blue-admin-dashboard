@@ -45,7 +45,7 @@ export const getTokens = (): { token: string | null, refreshToken: string | null
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
     // For real implementation with the API:
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/blue_admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,10 +62,10 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
     
     if (responseData.success && responseData.data) {
       // Save tokens to localStorage
-      saveTokens(responseData.data.token, responseData.data.refresh_token);
+      saveTokens(responseData.data.access_token, responseData.data.refresh_token);
       
       // Save user info
-      localStorage.setItem("user", JSON.stringify(responseData.data.user));
+      localStorage.setItem("user", JSON.stringify(responseData.data.access_token));
       
       return responseData;
     } else {
@@ -86,7 +86,7 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
   return new Promise((resolve, reject) => {
     // Mock successful login
-    if (credentials.username === "admin" && credentials.password === "password") {
+    if (credentials.email === "admin" && credentials.password === "password") {
       const mockToken = "mock-token-" + Math.random().toString(36).substring(2);
       const mockRefreshToken = "mock-refresh-token-" + Math.random().toString(36).substring(2);
       
@@ -94,7 +94,7 @@ const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
       const mockUser: User = {
         id: "1",
         uuid: "mock-uuid-" + Math.random().toString(36).substring(2),
-        username: credentials.username,
+        username: credentials.email,
         email: "admin@example.com",
         first_name: "Admin",
         last_name: "User",
@@ -116,9 +116,9 @@ const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
       
       const mockResponse: LoginResponse = {
         data: {
-          token: mockToken,
+          access_token: mockToken,
           refresh_token: mockRefreshToken,
-          user: mockUser
+          
         },
         details: "Mock login successful",
         success: true

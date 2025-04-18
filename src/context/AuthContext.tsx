@@ -56,17 +56,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const response = await authService.login(credentials);
       
-      const userData = response.data.user;
+      // const userData = response?.data?.access_token;
       
       // Add created_at and updated_at if not present (for mock data)
-      if (!userData.created_at) {
-        userData.created_at = new Date().toISOString();
-      }
-      if (!userData.updated_at) {
-        userData.updated_at = new Date().toISOString();
-      }
+      // if (!userData?.created_at) {
+      //   userData?.created_at = new Date().toISOString();
+      // }
+      // if (!userData?.updated_at) {
+      //   userData?.updated_at = new Date().toISOString();
+      // }
       
-      setUser(userData);
+      // setUser({first_name: "Super", last_name: "Admin", email: "superuser@mail.com", username:"superuser"});
     } finally {
       setLoading(false);
     }

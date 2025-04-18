@@ -39,8 +39,10 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       await login({
-        username: values.username,
-        password: values.password
+        grant_type: "authorization_code",
+        email: values.username,
+        password: values.password,
+        token_type: "Bearer",
       });
       // Auth context will handle the redirect and toast notifications
     } catch (error) {

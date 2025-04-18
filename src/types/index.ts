@@ -108,15 +108,16 @@ export interface DBStats {
 }
 
 export interface LoginCredentials {
-  username: string;
+  grant_type: string;
+  email: string;
   password: string;
+  token_type: string;
 }
 
 export interface LoginResponse {
   data: {
-    token: string;
+    access_token: string;
     refresh_token: string;
-    user: User;
   };
   details: string;
   success: boolean;
