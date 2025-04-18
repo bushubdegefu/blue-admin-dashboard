@@ -1,8 +1,8 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
 import { authService } from "@/services/authService";
 import type { LoginCredentials } from "@/services/authService";
+import { toast } from "sonner";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -27,12 +27,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkAuth = async () => {
       try {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
-          // Add created_at and updated_at if not present (for mock data)
           if (!currentUser.created_at) {
             currentUser.created_at = new Date().toISOString();
           }
@@ -56,17 +54,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const response = await authService.login(credentials);
       
-      // const userData = response?.data?.access_token;
-      
-      // Add created_at and updated_at if not present (for mock data)
-      // if (!userData?.created_at) {
-      //   userData?.created_at = new Date().toISOString();
-      // }
-      // if (!userData?.updated_at) {
-      //   userData?.updated_at = new Date().toISOString();
-      // }
-      
-      // setUser({first_name: "Super", last_name: "Admin", email: "superuser@mail.com", username:"superuser"});
+      if (response.success && response.data) {
+        const currentUser = authService.getCurrentUser();
+        setUser(currentUser);
+        toast.success("Login successful");
+      } else {
+        throw new Error(response.details || "Login failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
+      throw error;
     } finally {
       setLoading(false);
     }

@@ -8,7 +8,7 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import { UserCircle } from "lucide-react";
 
 interface MainLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;  // Make children optional since we're using Outlet
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
