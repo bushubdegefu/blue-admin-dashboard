@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -26,7 +25,8 @@ const GroupsPage = () => {
   // Get groups with React Query
   const { 
     data: groupsResponse, 
-    isLoading
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['groups', page, pageSize, filters],
     queryFn: () => groupService.getGroups({
@@ -34,10 +34,16 @@ const GroupsPage = () => {
       size: pageSize,
       ...filters
     }),
-    onError: (err: any) => {
-      toast.error(`Error loading groups: ${err.message}`);
+    meta: {
+      onError: (err: any) => {
+        toast.error(`Error loading groups: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching groups:", error);
+  }
 
   const groups = groupsResponse?.data || [];
 

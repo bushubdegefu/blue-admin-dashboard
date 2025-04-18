@@ -1,172 +1,250 @@
 
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Key } from "lucide-react";
-import { Scope, RelatedItem } from "@/types";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Badge, Pencil, Trash2, Users, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
-import { ScopeForm } from "@/components/forms/ScopeForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
-import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DataTable } from "@/components/common/DataTable";
+import { ActionMenu } from "@/components/common/ActionMenu";
+import StatusBadge from "@/components/common/StatusBadge";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { ScopeForm } from "@/components/forms/ScopeForm";
 import { scopeService } from "@/api/scopeService";
+import { Scope, TableColumn, FilterOption, RelatedItem } from "@/types";
 
 const ScopeDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Get scope data with React Query
+  // Fetch scope details
   const { 
     data: scopeResponse,
     isLoading,
-    isError,
-    error
+    error 
   } = useQuery({
-    queryKey: ['scope', id],
-    queryFn: () => scopeService.getScopeById(id || ""),
-    enabled: !!id,
-    onError: (err: any) => {
-      toast.error(`Error loading scope: ${err.message}`);
-      navigate("/scopes");
+    queryKey: ["scope", id],
+    queryFn: () => scopeService.getScope(id as string),
+    meta: {
+      onError: (err: Error) => {
+        toast.error(`Error loading scope details: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching scope details:", error);
+  }
 
   const scope = scopeResponse?.data;
 
-  // Update scope mutation
-  const updateScopeMutation = useMutation({
-    mutationFn: (scopeData: any) => scopeService.updateScope({
-      scopeId: id || "",
-      scopeData
-    }),
+  // Delete scope mutation
+  const deleteScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => scopeService.deleteScope(scopeId),
     onSuccess: () => {
-      toast.success("Scope updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['scope', id] });
+      toast.success(`Scope "${scope?.name}" deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ["scopes"] });
+      navigate("/scopes");
     },
-    onError: (err: any) => {
-      toast.error(`Failed to update scope: ${err.message}`);
-    },
-    onSettled: () => {
-      setIsSaving(false);
+    onError: (error: Error) => {
+      toast.error(`Failed to delete scope: ${error.message}`);
+      setIsDeleteDialogOpen(false);
     }
   });
 
-  const handleSave = async (formData: any) => {
-    setIsSaving(true);
+  // Update scope mutation
+  const updateScopeMutation = useMutation({
+    mutationFn: (data: any) => scopeService.updateScope(id as string, data),
+    onSuccess: () => {
+      toast.success("Scope updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["scope", id] });
+      setIsEditDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update scope: ${error.message}`);
+    }
+  });
+
+  const handleDeleteScope = () => {
+    if (!id) return;
+    deleteScopeMutation.mutate(id);
+  };
+
+  const handleUpdateScope = async (formData: any) => {
     updateScopeMutation.mutate(formData);
   };
 
-  if (isLoading) {
+  if (isLoading || !scope) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-admin-500"></div>
+      <div className="p-10 flex justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-admin-600"></div>
       </div>
     );
   }
 
-  if (!scope) {
-    return null;
-  }
-
-  // Convert scope.resources to RelatedItem[] for the RelatedItemsCard component
-  const resourceItems: RelatedItem[] = (scope.resources || []).map(resource => ({
-    id: String(resource.id),
+  // Related items
+  const resources = (scope.resources || []).map(resource => ({
+    id: resource.id,
     name: resource.name,
     description: `${resource.method} ${resource.route_path}`,
+    link: `/resources/${resource.id}`
   }));
 
-  // Convert scope.users to RelatedItem[] for the RelatedItemsCard component
-  const userItems: RelatedItem[] = (scope.users || []).map(user => ({
-    id: String(user.id),
-    name: `${user.first_name} ${user.last_name}`,
-    description: user.username,
-    link: `/users/${user.id}`,
-  }));
-
-  // Convert scope.groups to RelatedItem[] for the RelatedItemsCard component
-  const groupItems: RelatedItem[] = (scope.groups || []).map(group => ({
-    id: String(group.id),
+  const groups = (scope.groups || []).map(group => ({
+    id: group.id,
     name: group.name,
-    description: group.description,
-    link: `/groups/${group.id}`,
+    description: group.description || "",
+    link: `/groups/${group.id}`
+  }));
+
+  const users = (scope.users || []).map(user => ({
+    id: user.id,
+    name: `${user.first_name} ${user.middle_name ? user.middle_name + " " : ""}${user.last_name}`,
+    description: user.email,
+    link: `/users/${user.id}`
   }));
 
   return (
     <>
-      <PageHeader title="Scope Details">
-        <Button variant="outline" onClick={() => navigate("/scopes")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Scopes
-        </Button>
+      <PageHeader
+        title={scope.name}
+        description={scope.description || "No description"}
+        backLink="/scopes"
+      >
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Pencil className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
+        </div>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Key className="h-5 w-5 mr-2" />
-                Scope Information
-              </CardTitle>
-              <CardDescription>
-                View and edit scope details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScopeForm 
-                scope={scope} 
-                onSave={handleSave} 
-                isLoading={isSaving} 
-              />
-            </CardContent>
-          </Card>
-        </div>
+      <div className="mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="resources">
+              Resources ({resources.length})
+            </TabsTrigger>
+            <TabsTrigger value="groups">
+              Groups ({groups.length})
+            </TabsTrigger>
+            <TabsTrigger value="users">
+              Users ({users.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-6">
-          <Tabs defaultValue="resources">
-            <TabsList className="w-full">
-              <TabsTrigger value="resources" className="flex-1">Resources</TabsTrigger>
-              <TabsTrigger value="groups" className="flex-1">Groups</TabsTrigger>
-              <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="resources">
-              <RelatedItemsCard
-                title="Resources"
-                items={resourceItems}
-                entityType="Resource"
-                emptyMessage="No resources assigned to this scope."
-                canManage={true}
-                onAddItems={() => navigate("/resources/new")}
+          <TabsContent value="overview" className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Name</div>
+                    <div>{scope.name}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Description</div>
+                    <div>{scope.description || "No description"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Status</div>
+                    <StatusBadge active={scope.active ?? true} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">ID</div>
+                    <div className="font-mono text-xs">{scope.id}</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <RelatedItemsCard 
+                title="Associated Resources"
+                items={resources.slice(0, 5)}
+                icon={<Badge className="h-4 w-4 text-admin-500" />}
+                emptyMessage="No resources associated with this scope"
+                viewAllHref={resources.length > 5 ? "#resources" : undefined}
+                viewAllAction={resources.length > 5 ? () => setActiveTab("resources") : undefined}
               />
-            </TabsContent>
-            
-            <TabsContent value="groups">
-              <RelatedItemsCard
-                title="Groups"
-                items={groupItems}
-                entityType="Group"
-                emptyMessage="No groups have this scope."
-                canManage={false}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <RelatedItemsCard 
+                title="Associated Groups"
+                items={groups.slice(0, 5)}
+                icon={<Users className="h-4 w-4 text-admin-500" />}
+                emptyMessage="No groups associated with this scope"
+                viewAllHref={groups.length > 5 ? "#groups" : undefined}
+                viewAllAction={groups.length > 5 ? () => setActiveTab("groups") : undefined}
               />
-            </TabsContent>
-            
-            <TabsContent value="users">
-              <RelatedItemsCard
-                title="Users"
-                items={userItems}
-                entityType="User"
-                emptyMessage="No users have this scope."
-                canManage={false}
+
+              <RelatedItemsCard 
+                title="Associated Users"
+                items={users.slice(0, 5)}
+                icon={<CheckCircle2 className="h-4 w-4 text-admin-500" />}
+                emptyMessage="No users associated with this scope"
+                viewAllHref={users.length > 5 ? "#users" : undefined}
+                viewAllAction={users.length > 5 ? () => setActiveTab("users") : undefined}
               />
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="resources" className="mt-6">
+            {/* Resources table here */}
+          </TabsContent>
+
+          <TabsContent value="groups" className="mt-6">
+            {/* Groups table here */}
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-6">
+            {/* Users table here */}
+          </TabsContent>
+        </Tabs>
       </div>
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Scope"
+        description={`Are you sure you want to delete the scope "${scope.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteScope}
+        variant="destructive"
+        isLoading={deleteScopeMutation.isPending}
+      />
+
+      <ScopeForm
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        title="Edit Scope"
+        defaultValues={scope}
+        onSubmit={handleUpdateScope}
+        isLoading={updateScopeMutation.isPending}
+      />
     </>
   );
 };

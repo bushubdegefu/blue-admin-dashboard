@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -26,7 +25,8 @@ const ResourcesPage = () => {
   // Get resources with React Query
   const { 
     data: resourcesResponse, 
-    isLoading
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['resources', page, pageSize, filters],
     queryFn: () => resourceService.getResources({
@@ -34,10 +34,16 @@ const ResourcesPage = () => {
       size: pageSize,
       ...filters
     }),
-    onError: (err: any) => {
-      toast.error(`Error loading resources: ${err.message}`);
+    meta: {
+      onError: (err: any) => {
+        toast.error(`Error loading resources: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching resources:", error);
+  }
 
   const resources = resourcesResponse?.data || [];
 

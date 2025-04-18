@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -26,7 +25,8 @@ const ScopesPage = () => {
   // Get scopes with React Query
   const { 
     data: scopesResponse, 
-    isLoading
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['scopes', page, pageSize, filters],
     queryFn: () => scopeService.getScopes({
@@ -34,10 +34,16 @@ const ScopesPage = () => {
       size: pageSize,
       ...filters
     }),
-    onError: (err: any) => {
-      toast.error(`Error loading scopes: ${err.message}`);
+    meta: {
+      onError: (err: any) => {
+        toast.error(`Error loading scopes: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching scopes:", error);
+  }
 
   const scopes = scopesResponse?.data || [];
 

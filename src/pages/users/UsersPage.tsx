@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -24,7 +23,6 @@ const UsersPage = () => {
   const { 
     data: usersResponse, 
     isLoading, 
-    isError, 
     error
   } = useQuery({
     queryKey: ['users', page, pageSize, filters],
@@ -33,10 +31,16 @@ const UsersPage = () => {
       size: pageSize,
       ...filters
     }),
-    onError: (err: any) => {
-      toast.error(`Error loading users: ${err.message}`);
+    meta: {
+      onError: (err: any) => {
+        toast.error(`Error loading users: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching users:", error);
+  }
 
   const users = usersResponse?.data || [];
   

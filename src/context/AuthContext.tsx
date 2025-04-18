@@ -31,6 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkAuth = async () => {
       try {
         const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          // Add created_at and updated_at if not present (for mock data)
+          if (!currentUser.created_at) {
+            currentUser.created_at = new Date().toISOString();
+          }
+          if (!currentUser.updated_at) {
+            currentUser.updated_at = new Date().toISOString();
+          }
+        }
         setUser(currentUser);
       } catch (error) {
         console.error("Authentication error:", error);
@@ -46,7 +55,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       const response = await authService.login(credentials);
-      setUser(response.data.user);
+      
+      const userData = response.data.user;
+      
+      // Add created_at and updated_at if not present (for mock data)
+      if (!userData.created_at) {
+        userData.created_at = new Date().toISOString();
+      }
+      if (!userData.updated_at) {
+        userData.updated_at = new Date().toISOString();
+      }
+      
+      setUser(userData);
     } finally {
       setLoading(false);
     }

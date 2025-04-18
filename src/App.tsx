@@ -34,7 +34,15 @@ import NewResourcePage from "./pages/resources/NewResourcePage";
 import AppsPage from "./pages/apps/AppsPage";
 import NewAppPage from "./pages/apps/NewAppPage";
 
-const queryClient = new QueryClient();
+// Create a new client with updated default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -49,11 +57,9 @@ const App = () => (
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout>
-                {/* This children prop is required by MainLayoutProps */}
-                <p>Layout wrapper</p>
-              </MainLayout>}>
+              <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 
                 {/* Users Routes */}
                 <Route path="/users" element={<UsersPage />} />
@@ -79,9 +85,6 @@ const App = () => (
                 <Route path="/apps/new" element={<NewAppPage />} />
               </Route>
             </Route>
-            
-            {/* Redirect root to dashboard when logged in */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Catch-all route for 404 */}
             <Route path="*" element={<NotFound />} />

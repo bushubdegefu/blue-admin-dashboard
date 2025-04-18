@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -26,7 +25,8 @@ const AppsPage = () => {
   // Get apps with React Query
   const { 
     data: appsResponse, 
-    isLoading
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['apps', page, pageSize, filters],
     queryFn: () => appService.getApps({
@@ -34,10 +34,16 @@ const AppsPage = () => {
       size: pageSize,
       ...filters
     }),
-    onError: (err: any) => {
-      toast.error(`Error loading apps: ${err.message}`);
+    meta: {
+      onError: (err: any) => {
+        toast.error(`Error loading apps: ${err.message}`);
+      }
     }
   });
+
+  if (error) {
+    console.error("Error fetching apps:", error);
+  }
 
   const apps = appsResponse?.data || [];
 

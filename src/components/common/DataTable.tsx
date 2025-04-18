@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -19,7 +20,8 @@ import {
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
-  ChevronsRight 
+  ChevronsRight,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,16 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filterOptions?: FilterOption[];
   searchPlaceholder?: string;
+  isLoading?: boolean;
+  pagination?: {
+    pageIndex: number;
+    pageSize: number;
+    pageCount: number;
+    total: number;
+  };
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  onFilterChange?: (filters: any) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -45,33 +57,64 @@ export function DataTable<TData, TValue>({
   data,
   filterOptions = [],
   searchPlaceholder = "Search...",
+  isLoading = false,
+  pagination,
+  onPageChange,
+  onPageSizeChange,
+  onFilterChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
+  const [localPagination, setLocalPagination] = useState<PaginationState>({
+    pageIndex: pagination?.pageIndex ?? 0,
+    pageSize: pagination?.pageSize ?? 10,
   });
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+
+  // Update local pagination when external pagination changes
+  useEffect(() => {
+    if (pagination) {
+      setLocalPagination({
+        pageIndex: pagination.pageIndex,
+        pageSize: pagination.pageSize,
+      });
+    }
+  }, [pagination]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
-    onPaginationChange: setPagination,
+    manualPagination: !!onPageChange, // If onPageChange is provided, we're using external pagination
+    onPaginationChange: (updater) => {
+      const newPagination = typeof updater === 'function' 
+        ? updater(localPagination)
+        : updater;
+      
+      setLocalPagination(newPagination);
+      
+      // Call external handlers if provided
+      if (onPageChange && newPagination.pageIndex !== localPagination.pageIndex) {
+        onPageChange(newPagination.pageIndex + 1); // Convert to 1-based for API
+      }
+      
+      if (onPageSizeChange && newPagination.pageSize !== localPagination.pageSize) {
+        onPageSizeChange(newPagination.pageSize);
+      }
+    },
     state: {
       sorting,
       globalFilter,
       columnFilters,
-      pagination,
+      pagination: localPagination,
     },
+    pageCount: pagination?.pageCount ?? Math.ceil(data.length / localPagination.pageSize),
   });
 
   const handleFilterChange = (field: string, value: string) => {
@@ -84,6 +127,17 @@ export function DataTable<TData, TValue>({
       setActiveFilters({ ...activeFilters, [field]: value });
       table.getColumn(field)?.setFilterValue(value);
     }
+
+    // Call external filter handler if provided
+    if (onFilterChange) {
+      const newFilters = { ...activeFilters };
+      if (!value) {
+        delete newFilters[field];
+      } else {
+        newFilters[field] = value;
+      }
+      onFilterChange(newFilters);
+    }
   };
 
   const clearFilter = (field: string) => {
@@ -91,12 +145,38 @@ export function DataTable<TData, TValue>({
     delete newFilters[field];
     setActiveFilters(newFilters);
     table.getColumn(field)?.setFilterValue(undefined);
+    
+    // Call external filter handler if provided
+    if (onFilterChange) {
+      onFilterChange(newFilters);
+    }
   };
 
   const clearAllFilters = () => {
     setActiveFilters({});
     table.resetColumnFilters();
     setGlobalFilter("");
+    
+    // Call external filter handler if provided
+    if (onFilterChange) {
+      onFilterChange({});
+    }
+  };
+
+  const handleGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setGlobalFilter(value);
+    
+    // Add global search to filters if external filter handler is provided
+    if (onFilterChange) {
+      const newFilters = { ...activeFilters };
+      if (value) {
+        newFilters._search = value;
+      } else {
+        delete newFilters._search;
+      }
+      onFilterChange(newFilters);
+    }
   };
 
   const hasActiveFilters = Object.keys(activeFilters).length > 0 || globalFilter;
@@ -109,13 +189,20 @@ export function DataTable<TData, TValue>({
           <Input
             placeholder={searchPlaceholder}
             value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            onChange={handleGlobalFilterChange}
             className="pl-9"
           />
           {globalFilter && (
             <button
               className="absolute right-3 top-1/2 -translate-y-1/2"
-              onClick={() => setGlobalFilter("")}
+              onClick={() => {
+                setGlobalFilter("");
+                if (onFilterChange) {
+                  const newFilters = { ...activeFilters };
+                  delete newFilters._search;
+                  onFilterChange(newFilters);
+                }
+              }}
             >
               <X className="h-4 w-4 text-gray-500" />
             </button>
@@ -163,7 +250,14 @@ export function DataTable<TData, TValue>({
           {globalFilter && (
             <div className="px-3 py-1 text-xs rounded-full bg-admin-100 text-admin-800 flex items-center">
               <span>Search: {globalFilter}</span>
-              <button onClick={() => setGlobalFilter("")} className="ml-2">
+              <button onClick={() => {
+                setGlobalFilter("");
+                if (onFilterChange) {
+                  const newFilters = { ...activeFilters };
+                  delete newFilters._search;
+                  onFilterChange(newFilters);
+                }
+              }} className="ml-2">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -193,65 +287,71 @@ export function DataTable<TData, TValue>({
       )}
 
       <div className="border rounded-lg overflow-hidden bg-white">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full data-table">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="whitespace-nowrap">
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={cn(
-                            "flex items-center gap-1",
-                            header.column.getCanSort() && "cursor-pointer select-none"
-                          )}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {{
-                            asc: <ChevronUp className="ml-1 h-4 w-4" />,
-                            desc: <ChevronDown className="ml-1 h-4 w-4" />,
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+        {isLoading ? (
+          <div className="w-full h-48 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-admin-600" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full data-table">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id} className="whitespace-nowrap">
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={cn(
+                              "flex items-center gap-1",
+                              header.column.getCanSort() && "cursor-pointer select-none"
+                            )}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {{
+                              asc: <ChevronUp className="ml-1 h-4 w-4" />,
+                              desc: <ChevronDown className="ml-1 h-4 w-4" />,
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </div>
+                        )}
+                      </th>
                     ))}
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="py-6 text-center text-gray-500">
-                    No results found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length} className="py-6 text-center text-gray-500">
+                      No results found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="border-t px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <span>
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              Page {localPagination.pageIndex + 1} of{" "}
+              {pagination?.pageCount || table.getPageCount()}
             </span>
             <span>
-              | Showing {table.getRowModel().rows.length} of {data.length} records
+              | Showing {table.getRowModel().rows.length} of {pagination?.total || data.length} records
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -259,7 +359,7 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="icon"
               onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
+              disabled={!table.getCanPreviousPage() || isLoading}
             >
               <ChevronsLeft className="h-4 w-4" />
             </Button>
@@ -267,7 +367,7 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="icon"
               onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              disabled={!table.getCanPreviousPage() || isLoading}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -275,7 +375,7 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="icon"
               onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              disabled={!table.getCanNextPage() || isLoading}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -283,7 +383,7 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="icon"
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
+              disabled={!table.getCanNextPage() || isLoading}
             >
               <ChevronsRight className="h-4 w-4" />
             </Button>
