@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,17 +39,16 @@ const GroupDetailsPage = () => {
     error 
   } = useQuery({
     queryKey: ["group", id],
-    queryFn: () => groupService.getGroup(id as string),
+    queryFn: () => groupService.getGroupById(id as string),
+    enabled: !!id,
     meta: {
-      onError: (err: Error) => {
-        toast.error(`Error loading group details: ${err.message}`);
+      onSettled: (data, error) => {
+        if (error) {
+          toast.error(`Error loading group: ${(error as any).message}`);
+        }
       }
     }
   });
-
-  if (error) {
-    console.error("Error fetching group details:", error);
-  }
 
   const group = groupResponse?.data;
 
@@ -68,7 +68,10 @@ const GroupDetailsPage = () => {
 
   // Update group mutation
   const updateGroupMutation = useMutation({
-    mutationFn: (data: any) => groupService.updateGroup(id as string, data),
+    mutationFn: (data: any) => groupService.updateGroup({
+      groupId: id as string,
+      groupData: data
+    }),
     onSuccess: () => {
       toast.success("Group updated successfully");
       queryClient.invalidateQueries({ queryKey: ["group", id] });
@@ -113,11 +116,7 @@ const GroupDetailsPage = () => {
 
   return (
     <>
-      <PageHeader
-        title={group.name}
-        description={group.description || "No description"}
-        backLink="/groups"
-      >
+      <PageHeader title={group.name} description={group.description || "No description"}>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
@@ -191,36 +190,96 @@ const GroupDetailsPage = () => {
               <RelatedItemsCard 
                 title="Associated Users"
                 items={users.slice(0, 5)}
-                icon={<Users className="h-4 w-4 text-admin-500" />}
+                entityType="User"
                 emptyMessage="No users associated with this group"
-                viewAllHref={users.length > 5 ? "#users" : undefined}
-                viewAllAction={users.length > 5 ? () => setActiveTab("users") : undefined}
+                onAddItems={() => setActiveTab("users")}
+                canManage={users.length > 5}
               />
             </div>
 
             <RelatedItemsCard 
               title="Associated Scopes"
               items={scopes}
-              icon={<CheckCircle2 className="h-4 w-4 text-admin-500" />}
+              entityType="Scope"
               emptyMessage="No scopes associated with this group"
-              viewAllHref={scopes.length > 5 ? "#scopes" : undefined}
-              viewAllAction={scopes.length > 5 ? () => setActiveTab("scopes") : undefined}
+              onAddItems={() => setActiveTab("scopes")}
+              canManage={scopes.length > 5}
             />
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
-            {/* Users table here */}
+            {/* Users table implementation would go here */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Users in this Group</CardTitle>
+                <CardDescription>Manage users associated with this group</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {users.length > 0 ? (
+                  <div className="space-y-4">
+                    {users.map(user => (
+                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                        <div>
+                          <Link to={user.link || "#"} className="font-medium text-admin-600 hover:underline">
+                            {user.name}
+                          </Link>
+                          <p className="text-sm text-gray-500">{user.description}</p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => {}}>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No users associated with this group
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="scopes" className="mt-6">
-            {/* Scopes table here */}
+            {/* Scopes table implementation would go here */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Scopes in this Group</CardTitle>
+                <CardDescription>Manage scopes associated with this group</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scopes.length > 0 ? (
+                  <div className="space-y-4">
+                    {scopes.map(scope => (
+                      <div key={scope.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                        <div>
+                          <Link to={scope.link || "#"} className="font-medium text-admin-600 hover:underline">
+                            {scope.name}
+                          </Link>
+                          <p className="text-sm text-gray-500">{scope.description}</p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => {}}>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No scopes associated with this group
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
 
       <ConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         title="Delete Group"
         description={`Are you sure you want to delete the group "${group.name}"? This action cannot be undone.`}
         confirmText="Delete"
@@ -230,14 +289,13 @@ const GroupDetailsPage = () => {
         isLoading={deleteGroupMutation.isPending}
       />
 
-      <GroupForm
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        title="Edit Group"
-        defaultValues={group}
-        onSubmit={handleUpdateGroup}
-        isLoading={updateGroupMutation.isPending}
-      />
+      {isEditDialogOpen && (
+        <GroupForm
+          defaultValues={group}
+          onSubmit={handleUpdateGroup}
+          isLoading={updateGroupMutation.isPending}
+        />
+      )}
     </>
   );
 };

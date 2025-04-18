@@ -1,325 +1,157 @@
+import { User, Group, Scope, Resource, App } from "@/types";
 
-import { User, Group, Scope, Resource, App } from "../types";
-import { generateUUID } from "../lib/utils";
-
-// Mock Resources
-const resourcesMock: Resource[] = [
+export const users: User[] = [
   {
-    id: "r1",
-    name: "User List",
-    route_path: "/api/users",
-    method: "GET",
-    description: "Get list of all users",
-    scope_id: "s1",
-  },
-  {
-    id: "r2",
-    name: "User Details",
-    route_path: "/api/users/:id",
-    method: "GET",
-    description: "Get user by ID",
-    scope_id: "s1",
-  },
-  {
-    id: "r3",
-    name: "Create User",
-    route_path: "/api/users",
-    method: "POST",
-    description: "Create a new user",
-    scope_id: "s2",
-  },
-  {
-    id: "r4",
-    name: "Update User",
-    route_path: "/api/users/:id",
-    method: "PUT",
-    description: "Update existing user",
-    scope_id: "s2",
-  },
-  {
-    id: "r5",
-    name: "Group List",
-    route_path: "/api/groups",
-    method: "GET",
-    description: "Get all groups",
-    scope_id: "s3",
-  },
-  {
-    id: "r6",
-    name: "App Management",
-    route_path: "/api/apps",
-    method: "GET",
-    description: "Manage applications",
-    scope_id: "s4",
-  },
-];
-
-// Mock Scopes
-const scopesMock: Scope[] = [
-  {
-    id: "s1",
-    name: "user:read",
-    description: "Read user information",
-    active: true,
-    resources: [],
-    groups: [],
-    users: [],
-  },
-  {
-    id: "s2",
-    name: "user:write",
-    description: "Create or update user information",
-    active: true,
-    resources: [],
-    groups: [],
-    users: [],
-  },
-  {
-    id: "s3",
-    name: "group:read",
-    description: "Read group information",
-    active: true,
-    resources: [],
-    groups: [],
-    users: [],
-  },
-  {
-    id: "s4",
-    name: "app:admin",
-    description: "Administer applications",
-    active: true,
-    resources: [],
-    groups: [],
-    users: [],
-  },
-  {
-    id: "s5",
-    name: "system:admin",
-    description: "Full system administration",
-    active: true,
-    resources: [],
-    groups: [],
-    users: [],
-  },
-];
-
-// Mock Apps
-const appsMock: App[] = [
-  {
-    id: "a1",
-    uuid: generateUUID(),
-    name: "Admin Portal",
-    description: "Administrative portal for system management",
-    active: true,
-    groups: [],
-  },
-  {
-    id: "a2",
-    uuid: generateUUID(),
-    name: "Customer Dashboard",
-    description: "Customer-facing dashboard application",
-    active: true,
-    groups: [],
-  },
-  {
-    id: "a3",
-    uuid: generateUUID(),
-    name: "API Gateway",
-    description: "API access management",
-    active: true,
-    groups: [],
-  },
-  {
-    id: "a4",
-    uuid: generateUUID(),
-    name: "Analytics Platform",
-    description: "Data analytics and reporting",
-    active: false,
-    groups: [],
-  },
-];
-
-// Mock Groups
-const groupsMock: Group[] = [
-  {
-    id: "g1",
-    name: "Administrators",
-    description: "System administrators with full access",
-    active: true,
-    users: [],
-    scopes: [],
-    app_id: "a1",
-  },
-  {
-    id: "g2",
-    name: "User Managers",
-    description: "Can manage user accounts",
-    active: true,
-    users: [],
-    scopes: [],
-    app_id: "a1",
-  },
-  {
-    id: "g3",
-    name: "Readers",
-    description: "Read-only access to the system",
-    active: true,
-    users: [],
-    scopes: [],
-    app_id: "a2",
-  },
-  {
-    id: "g4",
-    name: "API Users",
-    description: "External API access",
-    active: true,
-    users: [],
-    scopes: [],
-    app_id: "a3",
-  },
-  {
-    id: "g5",
-    name: "Reporting",
-    description: "Access to reporting features",
-    active: false,
-    users: [],
-    scopes: [],
-    app_id: "a4",
-  },
-];
-
-// Mock Users
-const usersMock: User[] = [
-  {
-    id: "u1",
-    uuid: generateUUID(),
-    username: "johndoe",
+    id: "1",
+    uuid: "abc123-uuid-1",
+    username: "john.doe",
     email: "john.doe@example.com",
     first_name: "John",
     last_name: "Doe",
     disabled: false,
-    date_registered: new Date("2023-01-15").toISOString(),
+    date_registered: "2023-01-15T10:00:00Z",
+    created_at: "2023-01-15T10:00:00Z",
+    updated_at: "2023-05-20T15:30:00Z",
     groups: [],
     scopes: [],
   },
   {
-    id: "u2",
-    uuid: generateUUID(),
-    username: "janedoe",
-    email: "jane.doe@example.com",
+    id: "2",
+    uuid: "abc123-uuid-2",
+    username: "jane.smith",
+    email: "jane.smith@example.com",
     first_name: "Jane",
     middle_name: "Marie",
-    last_name: "Doe",
-    disabled: false,
-    date_registered: new Date("2023-02-10").toISOString(),
-    groups: [],
-    scopes: [],
-  },
-  {
-    id: "u3",
-    uuid: generateUUID(),
-    username: "bobsmith",
-    email: "bob.smith@example.com",
-    first_name: "Bob",
     last_name: "Smith",
-    disabled: true,
-    date_registered: new Date("2023-03-05").toISOString(),
-    groups: [],
-    scopes: [],
-  },
-  {
-    id: "u4",
-    uuid: generateUUID(),
-    username: "alicejones",
-    email: "alice.jones@example.com",
-    first_name: "Alice",
-    last_name: "Jones",
     disabled: false,
-    date_registered: new Date("2023-04-20").toISOString(),
+    date_registered: "2023-02-10T11:30:00Z",
+    created_at: "2023-02-10T11:30:00Z",
+    updated_at: "2023-06-15T09:45:00Z",
     groups: [],
     scopes: [],
   },
   {
-    id: "u5",
-    uuid: generateUUID(),
-    username: "mikebrown",
-    email: "mike.brown@example.com",
-    first_name: "Michael",
-    middle_name: "James",
+    id: "3",
+    uuid: "abc123-uuid-3",
+    username: "mark.johnson",
+    email: "mark.johnson@example.com",
+    first_name: "Mark",
+    last_name: "Johnson",
+    disabled: true,
+    date_registered: "2023-03-05T09:15:00Z",
+    created_at: "2023-03-05T09:15:00Z",
+    updated_at: "2023-07-20T14:20:00Z",
+    groups: [],
+    scopes: [],
+  },
+  {
+    id: "4",
+    uuid: "abc123-uuid-4",
+    username: "sarah.williams",
+    email: "sarah.williams@example.com",
+    first_name: "Sarah",
+    last_name: "Williams",
+    disabled: false,
+    date_registered: "2023-04-12T14:45:00Z",
+    created_at: "2023-04-12T14:45:00Z",
+    updated_at: "2023-08-10T10:10:00Z",
+    groups: [],
+    scopes: [],
+  },
+  {
+    id: "5",
+    uuid: "abc123-uuid-5",
+    username: "david.brown",
+    email: "david.brown@example.com",
+    first_name: "David",
+    middle_name: "Robert",
     last_name: "Brown",
     disabled: false,
-    date_registered: new Date("2023-05-12").toISOString(),
+    date_registered: "2023-05-20T16:30:00Z",
+    created_at: "2023-05-20T16:30:00Z",
+    updated_at: "2023-09-05T11:25:00Z",
     groups: [],
     scopes: [],
+  }
+];
+
+export const groups: Group[] = [
+  {
+    id: "101",
+    name: "Administrators",
+    description: "Full access to the system",
+    active: true,
+  },
+  {
+    id: "102",
+    name: "Editors",
+    description: "Can create and edit content",
+    active: true,
+  },
+  {
+    id: "103",
+    name: "Viewers",
+    description: "Read-only access",
+    active: true,
   },
 ];
 
-// Set up relationships
-// Scopes -> Resources
-scopesMock.forEach((scope) => {
-  scope.resources = resourcesMock.filter((r) => r.scope_id === scope.id);
-});
+export const scopes: Scope[] = [
+  {
+    id: "201",
+    name: "read:content",
+    description: "Allows reading content",
+    active: true,
+  },
+  {
+    id: "202",
+    name: "edit:content",
+    description: "Allows editing content",
+    active: true,
+  },
+  {
+    id: "203",
+    name: "delete:content",
+    description: "Allows deleting content",
+    active: false,
+  },
+];
 
-// Connect users to groups
-groupsMock[0].users = [usersMock[0], usersMock[4]]; // Admins: John and Mike
-groupsMock[1].users = [usersMock[1], usersMock[3]]; // User Managers: Jane and Alice
-groupsMock[2].users = [usersMock[2], usersMock[3]]; // Readers: Bob and Alice
-groupsMock[3].users = [usersMock[0], usersMock[4]]; // API Users: John and Mike
-groupsMock[4].users = [usersMock[1]]; // Reporting: Jane
+export const resources: Resource[] = [
+  {
+    id: "301",
+    name: "Get Content",
+    route_path: "/content/{id}",
+    method: "GET",
+    description: "Retrieves content by ID",
+  },
+  {
+    id: "302",
+    name: "Update Content",
+    route_path: "/content/{id}",
+    method: "PUT",
+    description: "Updates content by ID",
+  },
+  {
+    id: "303",
+    name: "Delete Content",
+    route_path: "/content/{id}",
+    method: "DELETE",
+    description: "Deletes content by ID",
+  },
+];
 
-// Connect users to their groups
-usersMock.forEach((user) => {
-  user.groups = groupsMock.filter((group) => 
-    group.users.some((u) => u.id === user.id)
-  );
-});
-
-// Connect groups to scopes
-groupsMock[0].scopes = [scopesMock[0], scopesMock[1], scopesMock[2], scopesMock[3], scopesMock[4]]; // Admins: all scopes
-groupsMock[1].scopes = [scopesMock[0], scopesMock[1]]; // User Managers: user:read, user:write
-groupsMock[2].scopes = [scopesMock[0], scopesMock[2]]; // Readers: user:read, group:read
-groupsMock[3].scopes = [scopesMock[3]]; // API Users: app:admin
-groupsMock[4].scopes = [scopesMock[0]]; // Reporting: user:read
-
-// Connect scopes to groups
-scopesMock.forEach((scope) => {
-  scope.groups = groupsMock.filter((group) => 
-    group.scopes.some((s) => s.id === scope.id)
-  );
-});
-
-// Connect users to scopes (through their groups)
-usersMock.forEach((user) => {
-  const userScopesSet = new Set<string>();
-  user.groups.forEach((group) => {
-    group.scopes.forEach((scope) => userScopesSet.add(scope.id));
-  });
-  user.scopes = scopesMock.filter((scope) => userScopesSet.has(scope.id));
-});
-
-// Connect scopes to users
-scopesMock.forEach((scope) => {
-  scope.users = usersMock.filter((user) => 
-    user.scopes.some((s) => s.id === scope.id)
-  );
-});
-
-// Connect apps to groups
-appsMock.forEach((app) => {
-  app.groups = groupsMock.filter((group) => group.app_id === app.id);
-});
-
-// Connect groups to apps
-groupsMock.forEach((group) => {
-  if (group.app_id) {
-    group.app = appsMock.find((app) => app.id === group.app_id);
-  }
-});
-
-export const mockData = {
-  users: usersMock,
-  groups: groupsMock,
-  scopes: scopesMock,
-  resources: resourcesMock,
-  apps: appsMock,
-};
+export const apps: App[] = [
+  {
+    id: "401",
+    name: "Content Management System",
+    description: "Manage website content",
+    active: true,
+  },
+  {
+    id: "402",
+    name: "User Dashboard",
+    description: "User account management",
+    active: true,
+  },
+];

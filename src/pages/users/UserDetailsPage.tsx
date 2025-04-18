@@ -30,12 +30,15 @@ const UserDetailsPage = () => {
     queryKey: ['user', id],
     queryFn: () => userService.getUserById(id || ""),
     enabled: !!id,
+    meta: {
+      onSettled: (data, error) => {
+        if (error) {
+          toast.error(`Error loading user: ${(error as any).message}`);
+          navigate("/users");
+        }
+      }
+    }
   });
-  
-  if (isError) {
-    toast.error(`Error loading user: ${(error as any).message}`);
-    navigate("/users");
-  }
 
   const user = userResponse?.data;
 
@@ -60,6 +63,84 @@ const UserDetailsPage = () => {
   const handleSave = async (formData: any) => {
     setIsSaving(true);
     updateUserMutation.mutate(formData);
+  };
+
+  // Mutations for adding and removing groups
+  const addGroupMutation = useMutation({
+    mutationFn: (groupId: string) => userService.addGroupUser({
+      userId: id || "",
+      groupId
+    }),
+    onSuccess: () => {
+      toast.success("Group added to user successfully");
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to add group: ${err.message}`);
+    }
+  });
+
+  const removeGroupMutation = useMutation({
+    mutationFn: (groupId: string) => userService.deleteGroupUser({
+      userId: id || "",
+      groupId
+    }),
+    onSuccess: () => {
+      toast.success("Group removed from user successfully");
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to remove group: ${err.message}`);
+    }
+  });
+
+  // Mutations for adding and removing scopes
+  const addScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => userService.addScopeUser({
+      userId: id || "",
+      scopeId
+    }),
+    onSuccess: () => {
+      toast.success("Scope added to user successfully");
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to add scope: ${err.message}`);
+    }
+  });
+
+  const removeScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => userService.deleteScopeUser({
+      userId: id || "",
+      scopeId
+    }),
+    onSuccess: () => {
+      toast.success("Scope removed from user successfully");
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to remove scope: ${err.message}`);
+    }
+  });
+
+  // Handle adding groups
+  const handleAddGroup = (groupId: string) => {
+    addGroupMutation.mutate(groupId);
+  };
+
+  // Handle removing groups
+  const handleRemoveGroup = (groupId: string) => {
+    removeGroupMutation.mutate(groupId);
+  };
+
+  // Handle adding scopes
+  const handleAddScope = (scopeId: string) => {
+    addScopeMutation.mutate(scopeId);
+  };
+
+  // Handle removing scopes
+  const handleRemoveScope = (scopeId: string) => {
+    removeScopeMutation.mutate(scopeId);
   };
 
   if (isLoading) {
@@ -155,6 +236,9 @@ const UserDetailsPage = () => {
             items={groupItems}
             entityType="Group"
             emptyMessage="This user is not a member of any groups."
+            onAddItems={() => {/* Implement group selection dialog */}}
+            onRemoveItem={handleRemoveGroup}
+            canManage={true}
           />
           
           <RelatedItemsCard
@@ -162,6 +246,9 @@ const UserDetailsPage = () => {
             items={scopeItems}
             entityType="Scope"
             emptyMessage="This user has no assigned scopes."
+            onAddItems={() => {/* Implement scope selection dialog */}}
+            onRemoveItem={handleRemoveScope}
+            canManage={true}
           />
         </div>
       </div>

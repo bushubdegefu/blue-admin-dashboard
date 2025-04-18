@@ -32,17 +32,16 @@ const ScopeDetailsPage = () => {
     error 
   } = useQuery({
     queryKey: ["scope", id],
-    queryFn: () => scopeService.getScope(id as string),
+    queryFn: () => scopeService.getScopeById(id as string),
+    enabled: !!id,
     meta: {
-      onError: (err: Error) => {
-        toast.error(`Error loading scope details: ${err.message}`);
+      onSettled: (data, error) => {
+        if (error) {
+          toast.error(`Error loading scope: ${(error as any).message}`);
+        }
       }
     }
   });
-
-  if (error) {
-    console.error("Error fetching scope details:", error);
-  }
 
   const scope = scopeResponse?.data;
 
@@ -62,7 +61,10 @@ const ScopeDetailsPage = () => {
 
   // Update scope mutation
   const updateScopeMutation = useMutation({
-    mutationFn: (data: any) => scopeService.updateScope(id as string, data),
+    mutationFn: (data: any) => scopeService.updateScope({
+      scopeId: id as string,
+      scopeData: data
+    }),
     onSuccess: () => {
       toast.success("Scope updated successfully");
       queryClient.invalidateQueries({ queryKey: ["scope", id] });
@@ -73,6 +75,35 @@ const ScopeDetailsPage = () => {
     }
   });
 
+  // Resource management mutations
+  const addResourceMutation = useMutation({
+    mutationFn: (resourceId: string) => scopeService.addResourceScope({
+      scopeId: id as string,
+      resourceId
+    }),
+    onSuccess: () => {
+      toast.success("Resource added to scope successfully");
+      queryClient.invalidateQueries({ queryKey: ["scope", id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to add resource: ${err.message}`);
+    }
+  });
+
+  const removeResourceMutation = useMutation({
+    mutationFn: (resourceId: string) => scopeService.deleteResourceScope({
+      scopeId: id as string,
+      resourceId
+    }),
+    onSuccess: () => {
+      toast.success("Resource removed from scope successfully");
+      queryClient.invalidateQueries({ queryKey: ["scope", id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to remove resource: ${err.message}`);
+    }
+  });
+
   const handleDeleteScope = () => {
     if (!id) return;
     deleteScopeMutation.mutate(id);
@@ -80,6 +111,14 @@ const ScopeDetailsPage = () => {
 
   const handleUpdateScope = async (formData: any) => {
     updateScopeMutation.mutate(formData);
+  };
+
+  const handleAddResource = (resourceId: string) => {
+    addResourceMutation.mutate(resourceId);
+  };
+
+  const handleRemoveResource = (resourceId: string) => {
+    removeResourceMutation.mutate(resourceId);
   };
 
   if (isLoading || !scope) {
@@ -114,11 +153,7 @@ const ScopeDetailsPage = () => {
 
   return (
     <>
-      <PageHeader
-        title={scope.name}
-        description={scope.description || "No description"}
-        backLink="/scopes"
-      >
+      <PageHeader title={scope.name} description={scope.description || "No description"}>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
@@ -183,10 +218,10 @@ const ScopeDetailsPage = () => {
               <RelatedItemsCard 
                 title="Associated Resources"
                 items={resources.slice(0, 5)}
-                icon={<Badge className="h-4 w-4 text-admin-500" />}
+                entityType="Resource"
                 emptyMessage="No resources associated with this scope"
-                viewAllHref={resources.length > 5 ? "#resources" : undefined}
-                viewAllAction={resources.length > 5 ? () => setActiveTab("resources") : undefined}
+                onAddItems={() => setActiveTab("resources")}
+                canManage={resources.length > 5}
               />
             </div>
 
@@ -194,40 +229,73 @@ const ScopeDetailsPage = () => {
               <RelatedItemsCard 
                 title="Associated Groups"
                 items={groups.slice(0, 5)}
-                icon={<Users className="h-4 w-4 text-admin-500" />}
+                entityType="Group"
                 emptyMessage="No groups associated with this scope"
-                viewAllHref={groups.length > 5 ? "#groups" : undefined}
-                viewAllAction={groups.length > 5 ? () => setActiveTab("groups") : undefined}
+                onAddItems={() => setActiveTab("groups")}
+                canManage={groups.length > 5}
               />
 
               <RelatedItemsCard 
                 title="Associated Users"
                 items={users.slice(0, 5)}
-                icon={<CheckCircle2 className="h-4 w-4 text-admin-500" />}
+                entityType="User"
                 emptyMessage="No users associated with this scope"
-                viewAllHref={users.length > 5 ? "#users" : undefined}
-                viewAllAction={users.length > 5 ? () => setActiveTab("users") : undefined}
+                onAddItems={() => setActiveTab("users")}
+                canManage={users.length > 5}
               />
             </div>
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
-            {/* Resources table here */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Resources in this Scope</CardTitle>
+                <CardDescription>Manage resources associated with this scope</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {resources.length > 0 ? (
+                  <div className="space-y-4">
+                    {resources.map(resource => (
+                      <div key={resource.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                        <div>
+                          <Link to={resource.link || "#"} className="font-medium text-admin-600 hover:underline">
+                            {resource.name}
+                          </Link>
+                          <p className="text-sm text-gray-500">{resource.description}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleRemoveResource(resource.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No resources associated with this scope
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="groups" className="mt-6">
-            {/* Groups table here */}
+            {/* Groups display */}
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
-            {/* Users table here */}
+            {/* Users display */}
           </TabsContent>
         </Tabs>
       </div>
 
       <ConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         title="Delete Scope"
         description={`Are you sure you want to delete the scope "${scope.name}"? This action cannot be undone.`}
         confirmText="Delete"
@@ -237,14 +305,13 @@ const ScopeDetailsPage = () => {
         isLoading={deleteScopeMutation.isPending}
       />
 
-      <ScopeForm
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        title="Edit Scope"
-        defaultValues={scope}
-        onSubmit={handleUpdateScope}
-        isLoading={updateScopeMutation.isPending}
-      />
+      {isEditDialogOpen && (
+        <ScopeForm
+          defaultValues={scope}
+          onSubmit={handleUpdateScope}
+          isLoading={updateScopeMutation.isPending}
+        />
+      )}
     </>
   );
 };
