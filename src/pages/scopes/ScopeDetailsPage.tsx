@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Key } from "lucide-react";
-import { Scope } from "@/types";
-import { getScopeById, updateScope } from "@/services/mockService";
+import { Scope, RelatedItem } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { ScopeForm } from "@/components/forms/ScopeForm";
 import { Button } from "@/components/ui/button";
@@ -11,57 +10,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { scopeService } from "@/api/scopeService";
 
 const ScopeDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [scope, setScope] = useState<Scope | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchScope = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        const scopeData = await getScopeById(id);
-        
-        if (!scopeData) {
-          toast.error("Scope not found");
-          navigate("/scopes");
-          return;
-        }
-        
-        setScope(scopeData);
-      } catch (error) {
-        console.error("Error fetching scope:", error);
-        toast.error("Failed to load scope details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Get scope data with React Query
+  const { 
+    data: scopeResponse,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['scope', id],
+    queryFn: () => scopeService.getScopeById(id || ""),
+    enabled: !!id,
+    onError: (err: any) => {
+      toast.error(`Error loading scope: ${err.message}`);
+      navigate("/scopes");
+    }
+  });
 
-    fetchScope();
-  }, [id, navigate]);
+  const scope = scopeResponse?.data;
 
-  const handleSave = async (formData: any) => {
-    if (!scope) return;
-    
-    try {
-      setIsSaving(true);
-      const updatedScope = await updateScope(scope.id, formData);
-      
-      if (updatedScope) {
-        setScope(updatedScope);
-        toast.success("Scope updated successfully");
-      }
-    } catch (error) {
-      console.error("Error updating scope:", error);
-      toast.error("Failed to update scope");
-    } finally {
+  // Update scope mutation
+  const updateScopeMutation = useMutation({
+    mutationFn: (scopeData: any) => scopeService.updateScope({
+      scopeId: id || "",
+      scopeData
+    }),
+    onSuccess: () => {
+      toast.success("Scope updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['scope', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to update scope: ${err.message}`);
+    },
+    onSettled: () => {
       setIsSaving(false);
     }
+  });
+
+  const handleSave = async (formData: any) => {
+    setIsSaving(true);
+    updateScopeMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -76,21 +72,24 @@ const ScopeDetailsPage = () => {
     return null;
   }
 
-  const resourceItems = scope.resources.map(resource => ({
-    id: resource.id,
+  // Convert scope.resources to RelatedItem[] for the RelatedItemsCard component
+  const resourceItems: RelatedItem[] = (scope.resources || []).map(resource => ({
+    id: String(resource.id),
     name: resource.name,
     description: `${resource.method} ${resource.route_path}`,
   }));
 
-  const userItems = scope.users.map(user => ({
-    id: user.id,
+  // Convert scope.users to RelatedItem[] for the RelatedItemsCard component
+  const userItems: RelatedItem[] = (scope.users || []).map(user => ({
+    id: String(user.id),
     name: `${user.first_name} ${user.last_name}`,
     description: user.username,
     link: `/users/${user.id}`,
   }));
 
-  const groupItems = scope.groups.map(group => ({
-    id: group.id,
+  // Convert scope.groups to RelatedItem[] for the RelatedItemsCard component
+  const groupItems: RelatedItem[] = (scope.groups || []).map(group => ({
+    id: String(group.id),
     name: group.name,
     description: group.description,
     link: `/groups/${group.id}`,

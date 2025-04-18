@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table"; // Added import
+import { createColumnHelper } from "@tanstack/react-table";
 import { Trash2, Plus, ExternalLink } from "lucide-react";
 import { Resource, TableColumn, FilterOption } from "@/types";
-import { getResources, deleteResource } from "@/services/mockService";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -12,43 +11,54 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { resourceService } from "@/api/resourceService";
 
 const ResourcesPage = () => {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchResources = async () => {
-      try {
-        const data = await getResources();
-        setResources(data);
-      } catch (error) {
-        console.error("Error fetching resources:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Get resources with React Query
+  const { 
+    data: resourcesResponse, 
+    isLoading
+  } = useQuery({
+    queryKey: ['resources', page, pageSize, filters],
+    queryFn: () => resourceService.getResources({
+      page,
+      size: pageSize,
+      ...filters
+    }),
+    onError: (err: any) => {
+      toast.error(`Error loading resources: ${err.message}`);
+    }
+  });
 
-    fetchResources();
-  }, []);
+  const resources = resourcesResponse?.data || [];
 
-  const handleDeleteResource = async () => {
-    if (!resourceToDelete) return;
-    
-    try {
-      await deleteResource(resourceToDelete.id);
-      setResources(resources.filter(resource => resource.id !== resourceToDelete.id));
-      toast.success(`Resource "${resourceToDelete.name}" deleted successfully`);
-    } catch (error) {
-      console.error("Error deleting resource:", error);
-      toast.error("Failed to delete resource");
-    } finally {
+  // Delete resource mutation
+  const deleteResourceMutation = useMutation({
+    mutationFn: (resourceId: string) => resourceService.deleteResource(resourceId),
+    onSuccess: () => {
+      toast.success(`Resource "${resourceToDelete?.name}" deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ['resources'] });
       setResourceToDelete(null);
       setConfirmDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete resource: ${error.message}`);
+      setConfirmDialogOpen(false);
     }
+  });
+
+  const handleDeleteResource = () => {
+    if (!resourceToDelete) return;
+    deleteResourceMutation.mutate(resourceToDelete.id);
   };
 
   const columnHelper = createColumnHelper<Resource>();
@@ -174,6 +184,18 @@ const ResourcesPage = () => {
     },
   ];
 
+  const handlePageChange = (page: number) => {
+    setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPageSize(pageSize);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    setFilters(filters);
+  };
+
   return (
     <>
       <PageHeader
@@ -193,6 +215,16 @@ const ResourcesPage = () => {
         data={resources}
         filterOptions={filterOptions}
         searchPlaceholder="Search resources..."
+        isLoading={isLoading}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onFilterChange={handleFilterChange}
+        pagination={{
+          pageIndex: page - 1,
+          pageSize,
+          pageCount: resourcesResponse?.pages || 1,
+          total: resourcesResponse?.total || 0
+        }}
       />
 
       <ConfirmDialog
@@ -204,6 +236,7 @@ const ResourcesPage = () => {
         cancelText="Cancel"
         onConfirm={handleDeleteResource}
         variant="destructive"
+        isLoading={deleteResourceMutation.isPending}
       />
     </>
   );

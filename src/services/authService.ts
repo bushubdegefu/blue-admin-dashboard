@@ -90,9 +90,9 @@ const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
       const mockToken = "mock-token-" + Math.random().toString(36).substring(2);
       const mockRefreshToken = "mock-refresh-token-" + Math.random().toString(36).substring(2);
       
-      // Mock user that matches the UserGet model
+      // Mock user that matches the UserGet model including required fields
       const mockUser: User = {
-        id: 1,
+        id: "1",
         uuid: "mock-uuid-" + Math.random().toString(36).substring(2),
         username: credentials.username,
         email: "admin@example.com",
@@ -103,7 +103,9 @@ const mockLogin = (credentials: LoginCredentials): Promise<LoginResponse> => {
         date_registered: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        last_login: new Date().toISOString()
+        last_login: new Date().toISOString(),
+        groups: [],
+        scopes: []
       };
       
       // Save tokens to localStorage
@@ -148,6 +150,10 @@ export const getCurrentUser = (): User | null => {
     }
   }
   return null;
+};
+
+export const getToken = (): string | null => {
+  return localStorage.getItem("token");
 };
 
 // API request with authentication that matches the API structure
@@ -207,4 +213,15 @@ export const authenticatedRequest = async (
   } catch (error) {
     return handleApiError(error);
   }
+};
+
+// Export LoginCredentials type and functions
+export type { LoginCredentials };
+
+export const authService = {
+  login,
+  logout,
+  isAuthenticated,
+  getCurrentUser,
+  getToken
 };

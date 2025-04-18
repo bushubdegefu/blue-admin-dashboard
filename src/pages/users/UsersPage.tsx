@@ -1,52 +1,45 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, UserPlus } from "lucide-react";
 import { User, TableColumn, FilterOption } from "@/types";
-import { getUsers } from "@/services/mockService";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
 import { formatDate } from "@/lib/utils";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { userService } from "@/api/userService";
+import { toast } from "sonner";
 
 const UsersPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const fetchUsers = async () => {
-  //     try {
-  //       const data = await getUsers();
-  //       setUsers(data);
-  //     } catch (error) {
-  //       console.error("Error fetching users:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+  // API query with filters
+  const { 
+    data: usersResponse, 
+    isLoading, 
+    isError, 
+    error
+  } = useQuery({
+    queryKey: ['users', page, pageSize, filters],
+    queryFn: () => userService.getUsers({
+      page,
+      size: pageSize,
+      ...filters
+    }),
+    onError: (err: any) => {
+      toast.error(`Error loading users: ${err.message}`);
+    }
+  });
 
-  //   fetchUsers();
-  // }, []);
-    // API query with filters
-    const { 
-      data: usersResponse, 
-      isLoading, 
-      isError, 
-      error,
-      refetch
-    } = useQuery({
-      queryKey: ['users', page, pageSize, filters],
-      queryFn: () => userService.getUsers({
-        page,
-        size: pageSize,
-        ...filters
-      })
-    });
-
+  const users = usersResponse?.data || [];
+  
   const columnHelper = createColumnHelper<User>();
   
   const columns: TableColumn<User>[] = [
@@ -88,7 +81,7 @@ const UsersPage = () => {
       header: "Groups",
       accessorKey: "groups",
       cell: (info) => {
-        const groups = info.row.original.groups;
+        const groups = info.row.original.groups || [];
         return groups.length > 0 ? (
           <div className="space-y-1">
             {groups.slice(0, 2).map((group) => (
@@ -112,7 +105,7 @@ const UsersPage = () => {
       header: "Scopes",
       accessorKey: "scopes",
       cell: (info) => {
-        const scopes = info.row.original.scopes;
+        const scopes = info.row.original.scopes || [];
         return scopes.length > 0 ? (
           <div className="space-y-1">
             {scopes.slice(0, 2).map((scope) => (
@@ -171,6 +164,18 @@ const UsersPage = () => {
     },
   ];
 
+  const handlePageChange = (page: number) => {
+    setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPageSize(pageSize);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    setFilters(filters);
+  };
+
   return (
     <>
       <PageHeader
@@ -190,6 +195,16 @@ const UsersPage = () => {
         data={users}
         filterOptions={filterOptions}
         searchPlaceholder="Search users..."
+        isLoading={isLoading}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onFilterChange={handleFilterChange}
+        pagination={{
+          pageIndex: page - 1,
+          pageSize,
+          pageCount: usersResponse?.pages || 1,
+          total: usersResponse?.total || 0
+        }}
       />
     </>
   );

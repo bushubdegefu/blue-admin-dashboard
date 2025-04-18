@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table"; // Added import
+import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { Scope, TableColumn, FilterOption } from "@/types";
-import { getScopes, deleteScope } from "@/services/mockService";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -12,43 +11,54 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { scopeService } from "@/api/scopeService";
 
 const ScopesPage = () => {
-  const [scopes, setScopes] = useState<Scope[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   const [scopeToDelete, setScopeToDelete] = useState<Scope | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchScopes = async () => {
-      try {
-        const data = await getScopes();
-        setScopes(data);
-      } catch (error) {
-        console.error("Error fetching scopes:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Get scopes with React Query
+  const { 
+    data: scopesResponse, 
+    isLoading
+  } = useQuery({
+    queryKey: ['scopes', page, pageSize, filters],
+    queryFn: () => scopeService.getScopes({
+      page,
+      size: pageSize,
+      ...filters
+    }),
+    onError: (err: any) => {
+      toast.error(`Error loading scopes: ${err.message}`);
+    }
+  });
 
-    fetchScopes();
-  }, []);
+  const scopes = scopesResponse?.data || [];
 
-  const handleDeleteScope = async () => {
-    if (!scopeToDelete) return;
-    
-    try {
-      await deleteScope(scopeToDelete.id);
-      setScopes(scopes.filter(scope => scope.id !== scopeToDelete.id));
-      toast.success(`Scope "${scopeToDelete.name}" deleted successfully`);
-    } catch (error) {
-      console.error("Error deleting scope:", error);
-      toast.error("Failed to delete scope");
-    } finally {
+  // Delete scope mutation
+  const deleteScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => scopeService.deleteScope(scopeId),
+    onSuccess: () => {
+      toast.success(`Scope "${scopeToDelete?.name}" deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ['scopes'] });
       setScopeToDelete(null);
       setConfirmDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete scope: ${error.message}`);
+      setConfirmDialogOpen(false);
     }
+  });
+
+  const handleDeleteScope = () => {
+    if (!scopeToDelete) return;
+    deleteScopeMutation.mutate(scopeToDelete.id);
   };
 
   const columnHelper = createColumnHelper<Scope>();
@@ -84,7 +94,8 @@ const ScopesPage = () => {
       header: "Resources",
       accessorKey: "resources",
       cell: (info) => {
-        const count = (info.getValue() as any[]).length;
+        const resources = info.row.original.resources || [];
+        const count = resources.length;
         return (
           <div className="text-sm">{count} resource{count !== 1 ? "s" : ""}</div>
         );
@@ -94,7 +105,8 @@ const ScopesPage = () => {
       header: "Users",
       accessorKey: "users",
       cell: (info) => {
-        const count = (info.getValue() as any[]).length;
+        const users = info.row.original.users || [];
+        const count = users.length;
         return (
           <div className="text-sm">{count} user{count !== 1 ? "s" : ""}</div>
         );
@@ -104,7 +116,8 @@ const ScopesPage = () => {
       header: "Groups",
       accessorKey: "groups",
       cell: (info) => {
-        const count = (info.getValue() as any[]).length;
+        const groups = info.row.original.groups || [];
+        const count = groups.length;
         return (
           <div className="text-sm">{count} group{count !== 1 ? "s" : ""}</div>
         );
@@ -154,6 +167,18 @@ const ScopesPage = () => {
     },
   ];
 
+  const handlePageChange = (page: number) => {
+    setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPageSize(pageSize);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    setFilters(filters);
+  };
+
   return (
     <>
       <PageHeader
@@ -173,6 +198,16 @@ const ScopesPage = () => {
         data={scopes}
         filterOptions={filterOptions}
         searchPlaceholder="Search scopes..."
+        isLoading={isLoading}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onFilterChange={handleFilterChange}
+        pagination={{
+          pageIndex: page - 1,
+          pageSize,
+          pageCount: scopesResponse?.pages || 1,
+          total: scopesResponse?.total || 0
+        }}
       />
 
       <ConfirmDialog
@@ -184,6 +219,7 @@ const ScopesPage = () => {
         cancelText="Cancel"
         onConfirm={handleDeleteScope}
         variant="destructive"
+        isLoading={deleteScopeMutation.isPending}
       />
     </>
   );

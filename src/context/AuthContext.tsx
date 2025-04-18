@@ -1,9 +1,8 @@
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { isAuthenticated, login, logout, LoginCredentials, getTokens, getCurrentUser } from '@/services/authService';
-import { User } from '@/types';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { User } from "@/types";
+import { authService } from "@/services/authService";
+import type { LoginCredentials } from "@/services/authService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -23,68 +22,48 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isUserAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = isAuthenticated();
-      setIsAuthenticated(authenticated);
-      
-      if (authenticated) {
-        const currentUser = getCurrentUser();
+    // Check if user is already logged in
+    const checkAuth = async () => {
+      try {
+        const currentUser = authService.getCurrentUser();
         setUser(currentUser);
+      } catch (error) {
+        console.error("Authentication error:", error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
-    
+
     checkAuth();
   }, []);
 
-  const handleLogin = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      const response = await login(credentials);
-      
-      if (response.success) {
-        setIsAuthenticated(true);
-        setUser(response.data.user);
-        toast.success('Login successful');
-        navigate('/');
-      } else {
-        toast.error(response.details || 'Login failed');
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
-      setIsAuthenticated(false);
-      setUser(null);
+      setLoading(true);
+      const response = await authService.login(credentials);
+      setUser(response.data.user);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    setIsAuthenticated(false);
+  const logout = () => {
+    authService.logout();
     setUser(null);
-    toast.success('Logged out successfully');
-    navigate('/login');
   };
 
   const value = {
-    isAuthenticated: isUserAuthenticated,
+    isAuthenticated: !!user,
     user,
     loading,
-    login: handleLogin,
-    logout: handleLogout,
+    login,
+    logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

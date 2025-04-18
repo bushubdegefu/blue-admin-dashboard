@@ -1,123 +1,142 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, UserPlus, UserMinus } from "lucide-react";
-import { Group, User, Scope } from "@/types";
-import { getGroupById, updateGroup, addUserToGroup, removeUserFromGroup } from "@/services/mockService";
-import { getUsers } from "@/services/mockService";
-import { getScopes } from "@/services/mockService";
+import { Group, User, Scope, RelatedItem } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { GroupForm } from "@/components/forms/GroupForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
-import { getApps } from "@/services/mockService";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle2Icon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { groupService } from "@/api/groupService";
+import { appService } from "@/api/appService";
+import { userService } from "@/api/userService";
+import { scopeService } from "@/api/scopeService";
 
 const GroupDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [group, setGroup] = useState<Group | null>(null);
-  const [allApps, setAllApps] = useState([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [allScopes, setAllScopes] = useState<Scope[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isAddScopeDialogOpen, setIsAddScopeDialogOpen] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [scopeSearchTerm, setScopeSearchTerm] = useState("");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        const [groupData, appsData, usersData, scopesData] = await Promise.all([
-          getGroupById(id),
-          getApps(),
-          getUsers(),
-          getScopes()
-        ]);
-        
-        if (!groupData) {
-          toast.error("Group not found");
-          navigate("/groups");
-          return;
-        }
-        
-        setGroup(groupData);
-        setAllApps(appsData);
-        setAllUsers(usersData);
-        setAllScopes(scopesData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load group details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, navigate]);
-
-  const handleSave = async (formData: any) => {
-    if (!group) return;
-    
-    try {
-      setIsSaving(true);
-      const updatedGroup = await updateGroup(group.id, formData);
-      
-      if (updatedGroup) {
-        setGroup(updatedGroup);
-        toast.success("Group updated successfully");
-      }
-    } catch (error) {
-      console.error("Error updating group:", error);
-      toast.error("Failed to update group");
-    } finally {
-      setIsSaving(false);
+  // Get group data with React Query
+  const { 
+    data: groupResponse,
+    isLoading: isGroupLoading
+  } = useQuery({
+    queryKey: ['group', id],
+    queryFn: () => groupService.getGroupById(id || ""),
+    enabled: !!id,
+    onError: (err: any) => {
+      toast.error(`Error loading group: ${err.message}`);
+      navigate("/groups");
     }
+  });
+
+  // Get all apps, users and scopes
+  const { data: appsResponse } = useQuery({
+    queryKey: ['apps-all'],
+    queryFn: () => appService.getApps({ page: 1, size: 100 })
+  });
+
+  const { data: usersResponse } = useQuery({
+    queryKey: ['users-all'],
+    queryFn: () => userService.getUsers({ page: 1, size: 100 })
+  });
+
+  const { data: scopesResponse } = useQuery({
+    queryKey: ['scopes-all'],
+    queryFn: () => scopeService.getScopes({ page: 1, size: 100 })
+  });
+
+  // Get available users and scopes to add to this group
+  const { data: availableUsersData } = useQuery({
+    queryKey: ['available-users', id],
+    queryFn: () => userService.getAvailableGroupsForUser(id || ""),
+    enabled: !!id
+  });
+
+  const { data: availableScopesData } = useQuery({
+    queryKey: ['available-scopes', id],
+    queryFn: () => scopeService.getAvailableGroupsForScope(id || ""),
+    enabled: !!id
+  });
+
+  const group = groupResponse?.data;
+  const allApps = appsResponse?.data || [];
+  const allUsers = usersResponse?.data || [];
+  const allScopes = scopesResponse?.data || [];
+
+  // Update group mutation
+  const updateGroupMutation = useMutation({
+    mutationFn: (groupData: any) => groupService.updateGroup({
+      groupId: id || "",
+      groupData
+    }),
+    onSuccess: () => {
+      toast.success("Group updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['group', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to update group: ${err.message}`);
+    }
+  });
+
+  // Add user to group mutation
+  const addUserToGroupMutation = useMutation({
+    mutationFn: (userId: string) => groupService.addUserGroup({
+      groupId: id || "",
+      userId
+    }),
+    onSuccess: () => {
+      toast.success("User added to group");
+      queryClient.invalidateQueries({ queryKey: ['group', id] });
+      queryClient.invalidateQueries({ queryKey: ['available-users', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to add user to group: ${err.message}`);
+    }
+  });
+
+  // Remove user from group mutation
+  const removeUserFromGroupMutation = useMutation({
+    mutationFn: (userId: string) => groupService.deleteUserGroup({
+      groupId: id || "",
+      userId
+    }),
+    onSuccess: () => {
+      toast.success("User removed from group");
+      queryClient.invalidateQueries({ queryKey: ['group', id] });
+      queryClient.invalidateQueries({ queryKey: ['available-users', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to remove user from group: ${err.message}`);
+    }
+  });
+
+  const handleSave = (formData: any) => {
+    updateGroupMutation.mutate(formData);
   };
 
-  const handleAddUserToGroup = async (userId: string) => {
-    if (!group) return;
-    
-    try {
-      await addUserToGroup(group.id, userId);
-      const updatedGroup = await getGroupById(group.id);
-      if (updatedGroup) {
-        setGroup(updatedGroup);
-        toast.success("User added to group");
-      }
-    } catch (error) {
-      console.error("Error adding user to group:", error);
-      toast.error("Failed to add user to group");
-    }
+  const handleAddUserToGroup = (userId: string) => {
+    addUserToGroupMutation.mutate(userId);
+    setIsAddUserDialogOpen(false);
   };
 
-  const handleRemoveUserFromGroup = async (userId: string) => {
-    if (!group) return;
-    
-    try {
-      await removeUserFromGroup(group.id, userId);
-      const updatedGroup = await getGroupById(group.id);
-      if (updatedGroup) {
-        setGroup(updatedGroup);
-        toast.success("User removed from group");
-      }
-    } catch (error) {
-      console.error("Error removing user from group:", error);
-      toast.error("Failed to remove user from group");
-    }
+  const handleRemoveUserFromGroup = (userId: string) => {
+    removeUserFromGroupMutation.mutate(userId);
   };
 
-  if (isLoading) {
+  if (isGroupLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-admin-500"></div>
@@ -129,22 +148,24 @@ const GroupDetailsPage = () => {
     return null;
   }
 
-  const userItems = group.users.map(user => ({
-    id: user.id,
+  // Convert group.users to RelatedItem[] for the RelatedItemsCard component
+  const userItems: RelatedItem[] = (group.users || []).map(user => ({
+    id: String(user.id),
     name: `${user.first_name} ${user.last_name}`,
     description: user.username,
     link: `/users/${user.id}`,
   }));
 
-  const scopeItems = group.scopes.map(scope => ({
-    id: scope.id,
+  // Convert group.scopes to RelatedItem[] for the RelatedItemsCard component
+  const scopeItems: RelatedItem[] = (group.scopes || []).map(scope => ({
+    id: String(scope.id),
     name: scope.name,
     description: scope.description,
     link: `/scopes/${scope.id}`,
   }));
 
   const filteredUsers = allUsers
-    .filter(user => !group.users.some(u => u.id === user.id))
+    .filter(user => !group.users?.some(u => u.id === user.id))
     .filter(user => 
       user.username.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -152,7 +173,7 @@ const GroupDetailsPage = () => {
     );
 
   const filteredScopes = allScopes
-    .filter(scope => !group.scopes.some(s => s.id === scope.id))
+    .filter(scope => !group.scopes?.some(s => s.id === scope.id))
     .filter(scope => 
       scope.name.toLowerCase().includes(scopeSearchTerm.toLowerCase()) ||
       (scope.description && scope.description.toLowerCase().includes(scopeSearchTerm.toLowerCase()))
@@ -184,7 +205,7 @@ const GroupDetailsPage = () => {
                 group={group} 
                 apps={allApps} 
                 onSave={handleSave} 
-                isLoading={isSaving} 
+                isLoading={updateGroupMutation.isPending} 
               />
             </CardContent>
           </Card>
@@ -234,10 +255,7 @@ const GroupDetailsPage = () => {
                   <div
                     key={user.id}
                     className="flex items-center justify-between p-2 border rounded-md hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      handleAddUserToGroup(user.id);
-                      setIsAddUserDialogOpen(false);
-                    }}
+                    onClick={() => handleAddUserToGroup(user.id)}
                   >
                     <div>
                       <div className="font-medium">

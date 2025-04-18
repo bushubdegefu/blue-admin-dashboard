@@ -30,6 +30,7 @@ const apiRequest = async (endpoint, options = {}) => {
       headers,
     };
 
+    console.log(`API Request: ${options.method || 'GET'} ${url}`);
     const response = await fetch(url, config);
 
     // Check if response is JSON
@@ -62,7 +63,7 @@ export const api = {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        queryParams.append(key, value);
+        queryParams.append(key, String(value));
       }
     });
 
@@ -90,4 +91,3 @@ export const api = {
     return apiRequest(endpoint, { method: "DELETE" });
   },
 };
-

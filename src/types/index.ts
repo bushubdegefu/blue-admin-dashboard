@@ -1,6 +1,5 @@
-
 export interface User {
-  id: number | string;
+  id: string;
   uuid: string;
   username: string;
   email: string;
@@ -17,7 +16,7 @@ export interface User {
 }
 
 export interface Group {
-  id: number | string;
+  id: string;
   name: string;
   description: string;
   active?: boolean;
@@ -25,12 +24,12 @@ export interface Group {
   updated_at?: string;
   users?: User[];
   scopes?: Scope[];
-  app_id?: number | string;
+  app_id?: string;
   app?: App;
 }
 
 export interface Scope {
-  id: number | string;
+  id: string;
   name: string;
   description: string;
   active?: boolean;
@@ -42,19 +41,19 @@ export interface Scope {
 }
 
 export interface Resource {
-  id: number | string;
+  id: string;
   name: string;
   route_path: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   description: string;
   created_at?: string;
   updated_at?: string;
-  scope_id?: number | string;
+  scope_id?: string;
   scope?: Scope;
 }
 
 export interface App {
-  id: number | string;
+  id: string;
   uuid?: string;
   name: string;
   description: string;
@@ -62,6 +61,13 @@ export interface App {
   created_at?: string;
   updated_at?: string;
   groups?: Group[];
+}
+
+export interface RelatedItem {
+  id: string;
+  name: string;
+  description: string;
+  link?: string;
 }
 
 export interface TableColumn<T> {
@@ -79,7 +85,6 @@ export interface FilterOption {
   options?: { label: string; value: string | boolean }[];
 }
 
-// Response types based on the API definitions
 export interface ResponseHTTP<T = any> {
   data: T;
   details: string;
@@ -102,18 +107,6 @@ export interface DBStats {
   total_users: number;
 }
 
-export interface RelatedItem {
-  id: string | number;
-  name: string;
-  description: string;
-  link?: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  refreshToken: string;
-}
-
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -129,7 +122,11 @@ export interface LoginResponse {
   success: boolean;
 }
 
-// API models that match the Swagger definitions
+export interface AuthResponse {
+  token: string;
+  refreshToken: string;
+}
+
 export namespace ApiModels {
   export interface UserGet {
     id: number;

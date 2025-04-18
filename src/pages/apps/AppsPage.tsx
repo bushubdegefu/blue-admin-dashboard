@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table"; // Added import
+import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { App as AppType, TableColumn, FilterOption } from "@/types";
-import { getApps, deleteApp } from "@/services/mockService";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -12,43 +11,54 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { appService } from "@/api/appService";
 
 const AppsPage = () => {
-  const [apps, setApps] = useState<AppType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState({});
   const [appToDelete, setAppToDelete] = useState<AppType | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchApps = async () => {
-      try {
-        const data = await getApps();
-        setApps(data);
-      } catch (error) {
-        console.error("Error fetching apps:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Get apps with React Query
+  const { 
+    data: appsResponse, 
+    isLoading
+  } = useQuery({
+    queryKey: ['apps', page, pageSize, filters],
+    queryFn: () => appService.getApps({
+      page,
+      size: pageSize,
+      ...filters
+    }),
+    onError: (err: any) => {
+      toast.error(`Error loading apps: ${err.message}`);
+    }
+  });
 
-    fetchApps();
-  }, []);
+  const apps = appsResponse?.data || [];
 
-  const handleDeleteApp = async () => {
-    if (!appToDelete) return;
-    
-    try {
-      await deleteApp(appToDelete.id);
-      setApps(apps.filter(app => app.id !== appToDelete.id));
-      toast.success(`App "${appToDelete.name}" deleted successfully`);
-    } catch (error) {
-      console.error("Error deleting app:", error);
-      toast.error("Failed to delete app");
-    } finally {
+  // Delete app mutation
+  const deleteAppMutation = useMutation({
+    mutationFn: (appId: string) => appService.deleteApp(appId),
+    onSuccess: () => {
+      toast.success(`App "${appToDelete?.name}" deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ['apps'] });
       setAppToDelete(null);
       setConfirmDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete app: ${error.message}`);
+      setConfirmDialogOpen(false);
     }
+  });
+
+  const handleDeleteApp = () => {
+    if (!appToDelete) return;
+    deleteAppMutation.mutate(appToDelete.id);
   };
 
   const columnHelper = createColumnHelper<AppType>();
@@ -93,7 +103,8 @@ const AppsPage = () => {
       header: "Groups",
       accessorKey: "groups",
       cell: (info) => {
-        const count = (info.getValue() as any[]).length;
+        const groups = info.row.original.groups || [];
+        const count = groups.length;
         return (
           <div className="text-sm">{count} group{count !== 1 ? "s" : ""}</div>
         );
@@ -138,6 +149,18 @@ const AppsPage = () => {
     },
   ];
 
+  const handlePageChange = (page: number) => {
+    setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPageSize(pageSize);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    setFilters(filters);
+  };
+
   return (
     <>
       <PageHeader
@@ -157,6 +180,16 @@ const AppsPage = () => {
         data={apps}
         filterOptions={filterOptions}
         searchPlaceholder="Search applications..."
+        isLoading={isLoading}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onFilterChange={handleFilterChange}
+        pagination={{
+          pageIndex: page - 1,
+          pageSize,
+          pageCount: appsResponse?.pages || 1,
+          total: appsResponse?.total || 0
+        }}
       />
 
       <ConfirmDialog
@@ -168,6 +201,7 @@ const AppsPage = () => {
         cancelText="Cancel"
         onConfirm={handleDeleteApp}
         variant="destructive"
+        isLoading={deleteAppMutation.isPending}
       />
     </>
   );

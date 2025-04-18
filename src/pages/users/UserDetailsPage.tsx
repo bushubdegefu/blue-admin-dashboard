@@ -1,68 +1,64 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, UserCog } from "lucide-react";
-import { User } from "@/types";
-import { getUserById, updateUser } from "@/services/mockService";
+import { User, RelatedItem } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { UserForm } from "@/components/forms/UserForm";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from "@/lib/utils";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { userService } from "@/api/userService";
 
 const UserDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        const userData = await getUserById(id);
-        
-        if (!userData) {
-          toast.error("User not found");
-          navigate("/users");
-          return;
-        }
-        
-        setUser(userData);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        toast.error("Failed to load user details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Get user data with React Query
+  const { 
+    data: userResponse,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['user', id],
+    queryFn: () => userService.getUserById(id || ""),
+    enabled: !!id,
+    onError: (err: any) => {
+      toast.error(`Error loading user: ${err.message}`);
+      navigate("/users");
+    }
+  });
 
-    fetchUser();
-  }, [id, navigate]);
+  const user = userResponse?.data;
 
-  const handleSave = async (formData: any) => {
-    if (!user) return;
-    
-    try {
-      setIsSaving(true);
-      const updatedUser = await updateUser(user.id, formData);
-      
-      if (updatedUser) {
-        setUser(updatedUser);
-        toast.success("User updated successfully");
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user");
-    } finally {
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: (userData: any) => userService.updateUser({
+      userId: id || "",
+      userData
+    }),
+    onSuccess: () => {
+      toast.success("User updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to update user: ${err.message}`);
+    },
+    onSettled: () => {
       setIsSaving(false);
     }
+  });
+
+  const handleSave = async (formData: any) => {
+    setIsSaving(true);
+    updateUserMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -77,15 +73,17 @@ const UserDetailsPage = () => {
     return null;
   }
 
-  const groupItems = user.groups.map(group => ({
-    id: group.id,
+  // Convert user.groups to RelatedItem[] for the RelatedItemsCard component
+  const groupItems: RelatedItem[] = (user.groups || []).map(group => ({
+    id: String(group.id),
     name: group.name,
     description: group.description,
     link: `/groups/${group.id}`,
   }));
 
-  const scopeItems = user.scopes.map(scope => ({
-    id: scope.id,
+  // Convert user.scopes to RelatedItem[] for the RelatedItemsCard component
+  const scopeItems: RelatedItem[] = (user.scopes || []).map(scope => ({
+    id: String(scope.id),
     name: scope.name,
     description: scope.description,
     link: `/scopes/${scope.id}`,
