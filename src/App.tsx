@@ -56,7 +56,7 @@ const App = () => (
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout><Outlet /></MainLayout>}>
+              <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 

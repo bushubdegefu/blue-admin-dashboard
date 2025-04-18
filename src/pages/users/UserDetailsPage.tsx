@@ -30,11 +30,12 @@ const UserDetailsPage = () => {
     queryKey: ['user', id],
     queryFn: () => userService.getUserById(id || ""),
     enabled: !!id,
-    onError: (err: any) => {
-      toast.error(`Error loading user: ${err.message}`);
-      navigate("/users");
-    }
   });
+  
+  if (isError) {
+    toast.error(`Error loading user: ${(error as any).message}`);
+    navigate("/users");
+  }
 
   const user = userResponse?.data;
 

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from 'react-router-dom';
 import {
   Form,
   FormControl,
@@ -26,6 +27,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const LoginPage = () => {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -44,11 +46,13 @@ const LoginPage = () => {
         password: values.password,
         token_type: "Bearer",
       });
+      navigate("/")
       // Auth context will handle the redirect and toast notifications
     } catch (error) {
       console.error("Login error:", error);
       // Error is handled by the auth context
     } finally {
+    
       setIsLoading(false);
     }
   };

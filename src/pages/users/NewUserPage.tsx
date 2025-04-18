@@ -6,7 +6,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { UserForm } from "@/components/forms/UserForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createUser } from "@/services/mockService";
+import { userService } from "@/api/userService"
 import { toast } from "sonner";
 
 const NewUserPage = () => {
@@ -16,7 +16,7 @@ const NewUserPage = () => {
   const handleSave = async (userData: any) => {
     try {
       setIsLoading(true);
-      const newUser = await createUser(userData);
+      const newUser = await userService.createUser(userData);
       toast.success("User created successfully");
       navigate(`/users/${newUser.id}`);
     } catch (error) {
