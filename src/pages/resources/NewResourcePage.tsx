@@ -2,47 +2,44 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileCode } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/PageHeader";
 import { ResourceForm } from "@/components/forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createResource, getScopes } from "@/services/mockService";
+import { resourceService } from "@/api/resourceService";
+import { scopeService } from "@/api/scopeService";
 import { Scope } from "@/types";
 import { toast } from "sonner";
 
 const NewResourcePage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [scopes, setScopes] = useState<Scope[]>([]);
-  const [isLoadingScopes, setIsLoadingScopes] = useState(true);
 
-  useEffect(() => {
-    const fetchScopes = async () => {
-      try {
-        setIsLoadingScopes(true);
-        const data = await getScopes();
-        setScopes(data);
-      } catch (error) {
-        console.error("Error fetching scopes:", error);
-      } finally {
-        setIsLoadingScopes(false);
-      }
-    };
+  // Fetch scopes with React Query
+  const { 
+    data: scopesResponse,
+    isLoading: isLoadingScopes
+  } = useQuery({
+    queryKey: ['scopes-for-resource'],
+    queryFn: () => scopeService.getScopes({ page: 1, size: 100 }),
+    select: (data) => data.data || []
+  });
 
-    fetchScopes();
-  }, []);
-
-  const handleSave = async (resourceData: any) => {
-    try {
-      setIsLoading(true);
-      await createResource(resourceData);
+  // Create resource mutation
+  const createResourceMutation = useMutation({
+    mutationFn: (resourceData: any) => resourceService.createResource(resourceData),
+    onSuccess: (data) => {
       toast.success("Resource created successfully");
-      navigate("/resources");
-    } catch (error) {
+      navigate(`/resources/${data.id}`);
+    },
+    onError: (error: any) => {
       console.error("Error creating resource:", error);
       toast.error("Failed to create resource");
-      setIsLoading(false);
     }
+  });
+
+  const handleSave = async (resourceData: any) => {
+    createResourceMutation.mutate(resourceData);
   };
 
   return (
@@ -71,9 +68,9 @@ const NewResourcePage = () => {
             </div>
           ) : (
             <ResourceForm 
-              scopes={scopes} 
+              scopes={scopesResponse || []} 
               onSave={handleSave} 
-              isLoading={isLoading} 
+              isLoading={createResourceMutation.isPending} 
             />
           )}
         </CardContent>

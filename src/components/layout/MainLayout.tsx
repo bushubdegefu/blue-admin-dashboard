@@ -1,14 +1,15 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { UserCircle } from "lucide-react";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 interface MainLayoutProps {
-  children?: React.ReactNode;  // Make children optional since we're using Outlet
+  children?: ReactNode;  // Make children optional since we're using Outlet
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
@@ -53,7 +54,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           </div>
         </div>
         <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {children || <Outlet />}
+          <ErrorBoundary>
+            {children || <Outlet />}
+          </ErrorBoundary>
         </div>
       </main>
     </div>

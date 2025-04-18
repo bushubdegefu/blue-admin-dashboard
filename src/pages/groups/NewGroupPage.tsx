@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, UsersRound } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/PageHeader";
 import { GroupForm } from "@/components/forms/GroupForm";
 import { Button } from "@/components/ui/button";
@@ -13,37 +14,32 @@ import { toast } from "sonner";
 
 const NewGroupPage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [apps, setApps] = useState<App[]>([]);
-  const [isLoadingApps, setIsLoadingApps] = useState(true);
 
-  useEffect(() => {
-    const fetchApps = async () => {
-      try {
-        setIsLoadingApps(true);
-        const data = await appService.getApps();
-        setApps(data);
-      } catch (error) {
-        console.error("Error fetching apps:", error);
-      } finally {
-        setIsLoadingApps(false);
-      }
-    };
+  // Fetch apps with React Query
+  const { 
+    data: appsResponse,
+    isLoading: isLoadingApps
+  } = useQuery({
+    queryKey: ['apps-for-group'],
+    queryFn: () => appService.getApps({ page: 1, size: 100 }),
+    select: (data) => data.data || []
+  });
 
-    fetchApps();
-  }, []);
-
-  const handleSave = async (groupData: any) => {
-    try {
-      setIsLoading(true);
-      const newGroup = await groupService.createGroup(groupData);
+  // Create group mutation
+  const createGroupMutation = useMutation({
+    mutationFn: (groupData: any) => groupService.createGroup(groupData),
+    onSuccess: (data) => {
       toast.success("Group created successfully");
-      navigate(`/groups/${newGroup.id}`);
-    } catch (error) {
+      navigate(`/groups/${data.id}`);
+    },
+    onError: (error: any) => {
       console.error("Error creating group:", error);
       toast.error("Failed to create group");
-      setIsLoading(false);
     }
+  });
+
+  const handleSave = async (groupData: any) => {
+    createGroupMutation.mutate(groupData);
   };
 
   return (
@@ -72,9 +68,9 @@ const NewGroupPage = () => {
             </div>
           ) : (
             <GroupForm 
-              apps={apps} 
+              apps={appsResponse || []} 
               onSave={handleSave} 
-              isLoading={isLoading} 
+              isLoading={createGroupMutation.isPending} 
             />
           )}
         </CardContent>

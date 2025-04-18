@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, KeyRound } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/PageHeader";
 import { ScopeForm } from "@/components/forms/ScopeForm";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,22 @@ import { toast } from "sonner";
 
 const NewScopePage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = async (scopeData: any) => {
-    try {
-      setIsLoading(true);
-      const newScope = await scopeService.createScope(scopeData);
+  // Use React Query mutation for creating a scope
+  const createScopeMutation = useMutation({
+    mutationFn: (scopeData: any) => scopeService.createScope(scopeData),
+    onSuccess: (data) => {
       toast.success("Scope created successfully");
-      navigate(`/scopes/${newScope.id}`);
-    } catch (error) {
+      navigate(`/scopes/${data.id}`);
+    },
+    onError: (error: any) => {
       console.error("Error creating scope:", error);
       toast.error("Failed to create scope");
-      setIsLoading(false);
     }
+  });
+
+  const handleSave = async (scopeData: any) => {
+    createScopeMutation.mutate(scopeData);
   };
 
   return (
@@ -46,7 +50,7 @@ const NewScopePage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScopeForm onSave={handleSave} isLoading={isLoading} />
+          <ScopeForm onSave={handleSave} isLoading={createScopeMutation.isPending} />
         </CardContent>
       </Card>
     </>

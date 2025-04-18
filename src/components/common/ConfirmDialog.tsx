@@ -23,11 +23,16 @@ interface ConfirmDialogProps {
   variant?: "default" | "destructive";
   children?: ReactNode;
   isLoading?: boolean;
+  // For backward compatibility
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function ConfirmDialog({
   open,
   onOpenChange,
+  isOpen, // Backward compatibility
+  onClose, // Backward compatibility 
   title,
   description,
   confirmText = "Confirm",
@@ -37,8 +42,15 @@ export function ConfirmDialog({
   children,
   isLoading = false,
 }: ConfirmDialogProps) {
+  // Handle both prop patterns
+  const dialogOpen = open || isOpen;
+  const handleOpenChange = (newState: boolean) => {
+    if (onOpenChange) onOpenChange(newState);
+    if (!newState && onClose) onClose();
+  };
+  
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

@@ -2,28 +2,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/PageHeader";
 import { AppForm } from "@/components/forms/AppForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createApp } from "@/services/mockService";
+import { appService } from "@/api/appService";
 import { toast } from "sonner";
 
 const NewAppPage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = async (appData: any) => {
-    try {
-      setIsLoading(true);
-      await createApp(appData);
+  // Create app mutation
+  const createAppMutation = useMutation({
+    mutationFn: (appData: any) => appService.createApp(appData),
+    onSuccess: (data) => {
       toast.success("Application created successfully");
-      navigate("/apps");
-    } catch (error) {
+      navigate(`/apps/${data.id}`);
+    },
+    onError: (error: any) => {
       console.error("Error creating application:", error);
       toast.error("Failed to create application");
-      setIsLoading(false);
     }
+  });
+
+  const handleSave = async (appData: any) => {
+    createAppMutation.mutate(appData);
   };
 
   return (
@@ -46,7 +50,7 @@ const NewAppPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AppForm onSave={handleSave} isLoading={isLoading} />
+          <AppForm onSave={handleSave} isLoading={createAppMutation.isPending} />
         </CardContent>
       </Card>
     </>

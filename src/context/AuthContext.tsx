@@ -1,7 +1,7 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User } from "@/types";
-import { authService } from "@/services/authService";
-import type { LoginCredentials } from "@/services/authService";
+import { User, LoginCredentials } from "@/types";
+import { authService } from "@/api/authService";
 import { toast } from "sonner";
 
 interface AuthContextType {
@@ -29,16 +29,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-          if (!currentUser.created_at) {
-            currentUser.created_at = new Date().toISOString();
+        if (authService.isAuthenticated()) {
+          const currentUser = authService.getCurrentUser();
+          if (currentUser) {
+            if (!currentUser.created_at) {
+              currentUser.created_at = new Date().toISOString();
+            }
+            if (!currentUser.updated_at) {
+              currentUser.updated_at = new Date().toISOString();
+            }
           }
-          if (!currentUser.updated_at) {
-            currentUser.updated_at = new Date().toISOString();
-          }
+          setUser(currentUser);
         }
-        setUser(currentUser);
       } catch (error) {
         console.error("Authentication error:", error);
       } finally {
@@ -54,12 +56,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const response = await authService.login(credentials);
       
-      if (response.success && response.data) {
+      if (response && response.success && response.data) {
         const currentUser = authService.getCurrentUser();
         setUser(currentUser);
         toast.success("Login successful");
       } else {
-        throw new Error(response.details || "Login failed");
+        throw new Error(response?.details || "Login failed");
       }
     } catch (error: any) {
       toast.error(error.message || "Login failed");
