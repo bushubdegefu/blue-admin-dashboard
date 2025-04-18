@@ -18,7 +18,7 @@ const NewAppPage = () => {
     mutationFn: (appData: any) => appService.createApp(appData),
     onSuccess: (data) => {
       toast.success("Application created successfully");
-      navigate(`/apps/${data.id}`);
+      navigate(`/apps`);
     },
     onError: (error: any) => {
       console.error("Error creating application:", error);

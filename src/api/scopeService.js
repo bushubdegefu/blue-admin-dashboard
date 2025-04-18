@@ -19,7 +19,7 @@ export const scopeService = {
 
   // Update a scope
   updateScope: (data) => {
-    return api.patch(`/blue_admin/scope/${data?.scopeId}}}`, data?.scopeData);
+    return api.patch(`/blue_admin/scope/${data?.scopeId}`, data?.scopeData);
   },
 
   // Delete a scope

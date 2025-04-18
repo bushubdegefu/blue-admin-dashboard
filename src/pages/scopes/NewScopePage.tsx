@@ -18,7 +18,7 @@ const NewScopePage = () => {
     mutationFn: (scopeData: any) => scopeService.createScope(scopeData),
     onSuccess: (data) => {
       toast.success("Scope created successfully");
-      navigate(`/scopes/${data.id}`);
+      navigate(`/scopes`);
     },
     onError: (error: any) => {
       console.error("Error creating scope:", error);

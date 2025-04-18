@@ -19,7 +19,7 @@ export const jwtsaltService = {
 
   // Update a jwtsalt
   updateJWTSalt: (data) => {
-    return api.patch(`/blue_admin/jwtsalt/${data?.jwtsaltId}}}`, data?.jwtsaltData);
+    return api.patch(`/blue_admin/jwtsalt/${data?.jwtsaltId}`, data?.jwtsaltData);
   },
 
   // Delete a jwtsalt

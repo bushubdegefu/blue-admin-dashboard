@@ -19,7 +19,7 @@ export const appService = {
 
   // Update a app
   updateApp: (data) => {
-    return api.patch(`/blue_admin/app/${data?.appId}}}`, data?.appData);
+    return api.patch(`/blue_admin/app/${data?.appId}`, data?.appData);
   },
 
   // Delete a app

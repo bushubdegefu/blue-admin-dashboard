@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, UserCog } from "lucide-react";
-import { User, RelatedItem } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { UserForm } from "@/components/forms/UserForm";
 import { Button } from "@/components/ui/button";
@@ -44,10 +43,7 @@ const UserDetailsPage = () => {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: (userData: any) => userService.updateUser({
-      userId: id || "",
-      userData
-    }),
+    mutationFn: (userData: any) => userService.updateUser(userData),
     onSuccess: () => {
       toast.success("User updated successfully");
       queryClient.invalidateQueries({ queryKey: ['user', id] });
@@ -62,7 +58,8 @@ const UserDetailsPage = () => {
 
   const handleSave = async (formData: any) => {
     setIsSaving(true);
-    updateUserMutation.mutate(formData);
+    console.log({userId: id, userData: JSON.parse(JSON.stringify(formData))});
+    updateUserMutation.mutate({userId: id, userData: JSON.parse(JSON.stringify(formData))});
   };
 
   // Mutations for adding and removing groups
@@ -155,22 +152,33 @@ const UserDetailsPage = () => {
     return null;
   }
 
-  // Convert user.groups to RelatedItem[] for the RelatedItemsCard component
-  const groupItems: RelatedItem[] = (user.groups || []).map(group => ({
-    id: String(group.id),
-    name: group.name,
-    description: group.description,
-    link: `/groups/${group.id}`,
-  }));
+  // ############
+  // Convert user.groups to any[] for the RelatedItemsCard component
+   // Fetch complementary permissions and groups data
+  const { data: groupItemsAvailable } = useQuery({
+    queryKey: ["user_comp_groups", id],
+    queryFn: () => userService.getAvailableGroupsForUser(id),
+  });
 
-  // Convert user.scopes to RelatedItem[] for the RelatedItemsCard component
-  const scopeItems: RelatedItem[] = (user.scopes || []).map(scope => ({
-    id: String(scope.id),
-    name: scope.name,
-    description: scope.description,
-    link: `/scopes/${scope.id}`,
-  }));
+  const { data: groupItemsAttached } = useQuery({
+    queryKey: ["user_groups", id],
+    queryFn: () => userService.getAttachedGroupsForUser(id),
 
+  });
+  
+
+const { data: scopeItemsAvailable } = useQuery({
+    queryKey: ["scope_comp_groups", id],
+    queryFn: () => userService.getAvailableScopesForUser(id),
+    
+  });
+
+  const { data: scopeItemsAttached } = useQuery({
+    queryKey: ["scope_groups", id],
+    queryFn: () => userService.getAttachedScopesForUser(id),
+  });
+
+// ######################
   return (
     <>
       <PageHeader title="User Details">
@@ -233,20 +241,22 @@ const UserDetailsPage = () => {
         <div className="space-y-6">
           <RelatedItemsCard
             title="Groups"
-            items={groupItems}
+            attachedItems={groupItemsAttached || []}
+            availableItems={groupItemsAvailable || []}
             entityType="Group"
             emptyMessage="This user is not a member of any groups."
-            onAddItems={() => {/* Implement group selection dialog */}}
+            onAddItems={handleAddGroup}
             onRemoveItem={handleRemoveGroup}
             canManage={true}
           />
           
           <RelatedItemsCard
             title="Scopes"
-            items={scopeItems}
+            availableItems={scopeItemsAvailable || []}
+            attachedItems={scopeItemsAttached || []}
             entityType="Scope"
             emptyMessage="This user has no assigned scopes."
-            onAddItems={() => {/* Implement scope selection dialog */}}
+            onAddItems={handleAddScope}
             onRemoveItem={handleRemoveScope}
             canManage={true}
           />

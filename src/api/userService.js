@@ -19,7 +19,7 @@ export const userService = {
 
   // Update a user
   updateUser: (data) => {
-    return api.patch(`/blue_admin/user/${data?.userId}}}`, data?.userData);
+    return api.patch(`/blue_admin/user/${data?.userId}`, data?.userData);
   },
 
   // Delete a user

@@ -51,9 +51,7 @@ export function GroupForm({
     defaultValues: {
       name: group?.name || "",
       description: group?.description || "",
-      active: group?.active ?? true,
-      app_id: group?.app_id || undefined,
-    },
+     },
   });
 
   const handleSubmit = async (values: GroupFormValues) => {
@@ -103,56 +101,7 @@ export function GroupForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="app_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Associated App</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an application" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="">None</SelectItem>
-                    {apps.map((app) => (
-                      <SelectItem key={app.id} value={app.id}>
-                        {app.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="active"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>Status</FormLabel>
-                  <div className="text-sm text-muted-foreground">
-                    {field.value
-                      ? "This group is active"
-                      : "This group is inactive and cannot be assigned"}
-                  </div>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        
         </div>
 
         <div className="flex justify-end">

@@ -19,7 +19,7 @@ export const resourceService = {
 
   // Update a resource
   updateResource: (data) => {
-    return api.patch(`/blue_admin/resource/${data?.resourceId}}}`, data?.resourceData);
+    return api.patch(`/blue_admin/resource/${data?.resourceId}`, data?.resourceData);
   },
 
   // Delete a resource

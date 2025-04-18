@@ -18,7 +18,7 @@ const NewUserPage = () => {
       setIsLoading(true);
       const newUser = await userService.createUser(userData);
       toast.success("User created successfully");
-      navigate(`/users/${newUser.id}`);
+      navigate(`/users`);
     } catch (error) {
       console.error("Error creating user:", error);
       toast.error("Failed to create user");

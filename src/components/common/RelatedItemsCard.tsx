@@ -25,7 +25,8 @@ interface RelatedItemsCardProps {
 
 export function RelatedItemsCard({
   title,
-  items,
+  availableItems,
+  attachedItems,
   entityType,
   emptyMessage = "No items found",
   onAddItems,
@@ -33,11 +34,11 @@ export function RelatedItemsCard({
   canManage = false,
 }: RelatedItemsCardProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const filteredItems = items.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredItems= availableItems || []
+  // const filteredItems = items?.filter(item => 
+  //   item?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  // );
 
   return (
     <div className="bg-white border rounded-lg overflow-hidden">
@@ -58,7 +59,7 @@ export function RelatedItemsCard({
         </div>
       </div>
       <div className="p-4">
-        {items.length > 0 ? (
+        {availableItems.length > 0 ? (
           <>
             <div className="mb-4 relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -77,17 +78,8 @@ export function RelatedItemsCard({
                     className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
                   >
                     <div className="flex-1">
-                      {item.link ? (
-                        <Link 
-                          to={item.link} 
-                          className="font-medium text-admin-600 hover:text-admin-800"
-                        >
-                          {item.name}
-                        </Link>
-                      ) : (
-                        <span className="font-medium">{item.name}</span>
-                      )}
-                      {item.description && (
+                      <span className="font-medium">{item?.name}</span>
+                     {item.description && (
                         <p className="text-xs text-gray-500 truncate">{item.description}</p>
                       )}
                     </div>
@@ -97,7 +89,7 @@ export function RelatedItemsCard({
                         size="icon"
                         className="h-7 w-7 text-gray-400 hover:text-red-500"
                         onClick={() => onRemoveItem(item.id)}
-                        title={`Remove ${item.name}`}
+                        title={`Remove ${item?.name}`}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -112,8 +104,8 @@ export function RelatedItemsCard({
             </div>
             <div className="mt-2 flex items-center justify-between">
               <Badge variant="outline" className="text-xs">
-                {items.length} {entityType.toLowerCase()}
-                {items.length !== 1 && "s"}
+                {attachedItems?.length} {entityType.toLowerCase()}
+                {attachedItems?.length !== 1 && "s"}
               </Badge>
             </div>
           </>

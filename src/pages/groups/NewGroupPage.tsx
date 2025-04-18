@@ -30,7 +30,7 @@ const NewGroupPage = () => {
     mutationFn: (groupData: any) => groupService.createGroup(groupData),
     onSuccess: (data) => {
       toast.success("Group created successfully");
-      navigate(`/groups/${data.id}`);
+      navigate(`/groups`);
     },
     onError: (error: any) => {
       console.error("Error creating group:", error);

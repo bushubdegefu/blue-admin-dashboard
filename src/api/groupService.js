@@ -19,7 +19,7 @@ export const groupService = {
 
   // Update a group
   updateGroup: (data) => {
-    return api.patch(`/blue_admin/group/${data?.groupId}}}`, data?.groupData);
+    return api.patch(`/blue_admin/group/${data?.groupId}`, data?.groupData);
   },
 
   // Delete a group
