@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PageHeader from "@/components/layout/PageHeader";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, UserCircle, Key, FolderKey, Layers } from "lucide-react";
-import { getUsers } from "@/services/mockService";
-import { getGroups } from "@/services/mockService";
-import { getScopes } from "@/services/mockService";
-import { getResources } from "@/services/mockService";
-import { getApps } from "@/services/mockService";
+import { userService } from "@/api/userService";
+import { groupService } from "@/api/groupService";
+import { scopeService } from "@/api/scopeService";
+import { resourceService } from "@/api/resourceService";
+import { appService } from "@/api/appService";
 import { User, Group, Scope, Resource, App } from "@/types";
 
 interface StatusCardProps {
@@ -56,11 +56,11 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [usersData, groupsData, scopesData, resourcesData, appsData] = await Promise.all([
-          getUsers(),
-          getGroups(),
-          getScopes(),
-          getResources(),
-          getApps(),
+          userService.getUsers(),
+          groupService.getGroups(),
+          scopeService.getScopes(),
+          resourceService.getResources(),
+          appService.getApps(),
         ]);
         
         setUsers(usersData);

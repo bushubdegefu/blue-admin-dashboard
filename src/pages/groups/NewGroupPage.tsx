@@ -6,7 +6,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import { GroupForm } from "@/components/forms/GroupForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createGroup, getApps } from "@/services/mockService";
+import { groupService } from "@/api/groupService";
+import { appService } from "@/api/appService";
 import { App } from "@/types";
 import { toast } from "sonner";
 
@@ -20,7 +21,7 @@ const NewGroupPage = () => {
     const fetchApps = async () => {
       try {
         setIsLoadingApps(true);
-        const data = await getApps();
+        const data = await appService.getApps();
         setApps(data);
       } catch (error) {
         console.error("Error fetching apps:", error);
@@ -35,7 +36,7 @@ const NewGroupPage = () => {
   const handleSave = async (groupData: any) => {
     try {
       setIsLoading(true);
-      const newGroup = await createGroup(groupData);
+      const newGroup = await groupService.createGroup(groupData);
       toast.success("Group created successfully");
       navigate(`/groups/${newGroup.id}`);
     } catch (error) {

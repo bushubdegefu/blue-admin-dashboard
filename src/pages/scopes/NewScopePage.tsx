@@ -6,7 +6,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { ScopeForm } from "@/components/forms/ScopeForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createScope } from "@/services/mockService";
+import { scopeService } from "@/api/scopeService";
 import { toast } from "sonner";
 
 const NewScopePage = () => {
@@ -16,7 +16,7 @@ const NewScopePage = () => {
   const handleSave = async (scopeData: any) => {
     try {
       setIsLoading(true);
-      const newScope = await createScope(scopeData);
+      const newScope = await scopeService.createScope(scopeData);
       toast.success("Scope created successfully");
       navigate(`/scopes/${newScope.id}`);
     } catch (error) {
