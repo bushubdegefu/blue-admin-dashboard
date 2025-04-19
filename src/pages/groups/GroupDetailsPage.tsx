@@ -16,13 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
-import { DataTable } from "@/components/common/DataTable";
+import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { GroupForm } from "@/components/forms/GroupForm";
 import { groupService } from "@/api/groupService";
-import { Group, TableColumn, FilterOption, RelatedItem } from "@/types";
+import { Group, TableColumn, FilterOption } from "@/types";
 
 const GroupDetailsPage = () => {
   const { id } = useParams();
@@ -31,6 +31,9 @@ const GroupDetailsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [scopesPage, setScopesPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch group details
   const { 
@@ -48,6 +51,26 @@ const GroupDetailsPage = () => {
         }
       }
     }
+  });
+
+  // Fetch users with pagination
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers
+  } = useQuery({
+    queryKey: ["group_users", id, usersPage, pageSize],
+    queryFn: () => groupService.getGroupUsers(id as string, { page: usersPage, limit: pageSize }),
+    enabled: !!id && activeTab === "users"
+  });
+
+  // Fetch scopes with pagination
+  const {
+    data: scopesData,
+    isLoading: isLoadingScopes
+  } = useQuery({
+    queryKey: ["group_scopes", id, scopesPage, pageSize],
+    queryFn: () => groupService.getGroupScopes(id as string, { page: scopesPage, limit: pageSize }),
+    enabled: !!id && activeTab === "scopes"
   });
 
   const group = groupResponse?.data;
@@ -82,6 +105,38 @@ const GroupDetailsPage = () => {
     }
   });
 
+  // Remove user from group mutation
+  const removeUserMutation = useMutation({
+    mutationFn: (userId: string) => groupService.removeUserFromGroup({
+      groupId: id as string,
+      userId
+    }),
+    onSuccess: () => {
+      toast.success("User removed from group");
+      queryClient.invalidateQueries({ queryKey: ["group_users", id] });
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to remove user: ${error.message}`);
+    }
+  });
+
+  // Remove scope from group mutation
+  const removeScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => groupService.removeScopeFromGroup({
+      groupId: id as string,
+      scopeId
+    }),
+    onSuccess: () => {
+      toast.success("Scope removed from group");
+      queryClient.invalidateQueries({ queryKey: ["group_scopes", id] });
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to remove scope: ${error.message}`);
+    }
+  });
+
   const handleDeleteGroup = () => {
     if (!id) return;
     deleteGroupMutation.mutate(id);
@@ -91,6 +146,90 @@ const GroupDetailsPage = () => {
     updateGroupMutation.mutate(formData);
   };
 
+  const handleRemoveUser = (userId: string) => {
+    removeUserMutation.mutate(userId);
+  };
+
+  const handleRemoveScope = (scopeId: string) => {
+    removeScopeMutation.mutate(scopeId);
+  };
+
+  const userColumns = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => {
+        const user = row.original;
+        const userName = `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`;
+        return (
+          <Link to={`/users/${user.id}`} className="font-medium text-blue-600 hover:underline">
+            {userName || "Unknown User"}
+          </Link>
+        );
+      }
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleRemoveUser(user.id)}
+            className="hover:text-red-500"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        );
+      }
+    }
+  ];
+
+  const scopeColumns = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => {
+        const scope = row.original;
+        return (
+          <Link to={`/scopes/${scope.id}`} className="font-medium text-blue-600 hover:underline">
+            {scope.name}
+          </Link>
+        );
+      }
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+    },
+    {
+      accessorKey: "active",
+      header: "Status",
+      cell: ({ row }) => <StatusBadge active={row.original.active} />
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const scope = row.original;
+        return (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleRemoveScope(scope.id)}
+            className="hover:text-red-500"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        );
+      }
+    }
+  ];
+
   if (isLoading || !group) {
     return (
       <div className="p-10 flex justify-center">
@@ -99,19 +238,17 @@ const GroupDetailsPage = () => {
     );
   }
 
-  // Related items
-  const users = (group.users || []).map(user => ({
+  // Related items for overview
+  const users = (group.users || []).slice(0, 5).map(user => ({
     id: user.id,
-    name: `${user.first_name} ${user.middle_name ? user.middle_name + " " : ""}${user.last_name}`,
+    name: `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`,
     description: user.email,
-    link: `/users/${user.id}`
   }));
 
-  const scopes = (group.scopes || []).map(scope => ({
+  const scopes = (group.scopes || []).slice(0, 5).map(scope => ({
     id: scope.id,
     name: scope.name,
     description: scope.description || "",
-    link: `/scopes/${scope.id}`
   }));
 
   return (
@@ -142,10 +279,10 @@ const GroupDetailsPage = () => {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">
-              Users ({users.length})
+              Users ({group.users?.length || 0})
             </TabsTrigger>
             <TabsTrigger value="scopes">
-              Scopes ({scopes.length})
+              Scopes ({group.scopes?.length || 0})
             </TabsTrigger>
           </TabsList>
 
@@ -172,6 +309,10 @@ const GroupDetailsPage = () => {
                     <div className="text-sm text-gray-500 mb-1">ID</div>
                     <div className="font-mono text-xs">{group.id}</div>
                   </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">UUID</div>
+                    <div className="font-mono text-xs">{group.uuid}</div>
+                  </div>
                   {group.app && (
                     <div>
                       <div className="text-sm text-gray-500 mb-1">Application</div>
@@ -189,88 +330,66 @@ const GroupDetailsPage = () => {
 
               <RelatedItemsCard 
                 title="Associated Users"
-                items={users.slice(0, 5)}
+                attachedItems={users}
+                availableItems={[]}
                 entityType="User"
                 emptyMessage="No users associated with this group"
-                onAddItems={() => setActiveTab("users")}
-                canManage={users.length > 5}
+                canManage={false}
               />
             </div>
 
             <RelatedItemsCard 
               title="Associated Scopes"
-              items={scopes}
+              attachedItems={scopes}
+              availableItems={[]}
               entityType="Scope"
               emptyMessage="No scopes associated with this group"
-              onAddItems={() => setActiveTab("scopes")}
-              canManage={scopes.length > 5}
+              canManage={false}
             />
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
-            {/* Users table implementation would go here */}
             <Card>
               <CardHeader>
                 <CardTitle>Users in this Group</CardTitle>
                 <CardDescription>Manage users associated with this group</CardDescription>
               </CardHeader>
               <CardContent>
-                {users.length > 0 ? (
-                  <div className="space-y-4">
-                    {users.map(user => (
-                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                        <div>
-                          <Link to={user.link || "#"} className="font-medium text-admin-600 hover:underline">
-                            {user.name}
-                          </Link>
-                          <p className="text-sm text-gray-500">{user.description}</p>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => {}}>
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No users associated with this group
-                  </div>
-                )}
+                <PaginatedDataTable
+                  columns={userColumns}
+                  data={usersData?.data || []}
+                  isLoading={isLoadingUsers}
+                  pageCount={usersData?.meta?.totalPages || 1}
+                  totalItems={usersData?.meta?.totalItems || 0}
+                  currentPage={usersPage}
+                  pageSize={pageSize}
+                  onPageChange={(page) => setUsersPage(page)}
+                  onPageSizeChange={(size) => setPageSize(size)}
+                  searchPlaceholder="Search users..."
+                />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="scopes" className="mt-6">
-            {/* Scopes table implementation would go here */}
             <Card>
               <CardHeader>
                 <CardTitle>Scopes in this Group</CardTitle>
                 <CardDescription>Manage scopes associated with this group</CardDescription>
               </CardHeader>
               <CardContent>
-                {scopes.length > 0 ? (
-                  <div className="space-y-4">
-                    {scopes.map(scope => (
-                      <div key={scope.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                        <div>
-                          <Link to={scope.link || "#"} className="font-medium text-admin-600 hover:underline">
-                            {scope.name}
-                          </Link>
-                          <p className="text-sm text-gray-500">{scope.description}</p>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => {}}>
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No scopes associated with this group
-                  </div>
-                )}
+                <PaginatedDataTable
+                  columns={scopeColumns}
+                  data={scopesData?.data || []}
+                  isLoading={isLoadingScopes}
+                  pageCount={scopesData?.meta?.totalPages || 1}
+                  totalItems={scopesData?.meta?.totalItems || 0}
+                  currentPage={scopesPage}
+                  pageSize={pageSize}
+                  onPageChange={(page) => setScopesPage(page)}
+                  onPageSizeChange={(size) => setPageSize(size)}
+                  searchPlaceholder="Search scopes..."
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -278,8 +397,8 @@ const GroupDetailsPage = () => {
       </div>
 
       <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
         title="Delete Group"
         description={`Are you sure you want to delete the group "${group.name}"? This action cannot be undone.`}
         confirmText="Delete"
@@ -291,9 +410,10 @@ const GroupDetailsPage = () => {
 
       {isEditDialogOpen && (
         <GroupForm
-          defaultValues={group}
-          onSubmit={handleUpdateGroup}
+          group={group}
+          onSave={handleUpdateGroup}
           isLoading={updateGroupMutation.isPending}
+          onCancel={() => setIsEditDialogOpen(false)}
         />
       )}
     </>

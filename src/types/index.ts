@@ -1,17 +1,15 @@
+
 export interface User {
   id: string;
   uuid: string;
-  username: string;
   email: string;
-  first_name: string;
+  first_name?: string;
   middle_name?: string;
-  last_name: string;
-  disabled: boolean;
-  date_registered: string;
-  created_at: string;
-  updated_at: string;
-  groups: Group[];
-  scopes: Scope[];
+  last_name?: string;
+  date_registered?: string;
+  active: boolean;
+  groups?: Group[];
+  scopes?: Scope[];
 }
 
 export interface Group {
@@ -22,6 +20,7 @@ export interface Group {
   active: boolean;
   app?: App;
   users?: User[];
+  scopes?: Scope[];
 }
 
 export interface Scope {
@@ -30,9 +29,9 @@ export interface Scope {
   name: string;
   description?: string;
   active: boolean;
-  resources?: Resource[];
   groups?: Group[];
   users?: User[];
+  resources?: Resource[];
 }
 
 export interface Resource {
@@ -40,6 +39,8 @@ export interface Resource {
   uuid: string;
   name: string;
   description?: string;
+  route_path: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   active: boolean;
   scopes?: Scope[];
 }
@@ -50,34 +51,61 @@ export interface App {
   name: string;
   description?: string;
   active: boolean;
+  created_at?: string;
+  updated_at?: string;
   groups?: Group[];
+  roles?: Role[];
 }
 
-export interface TableColumn<T> {
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface TableColumn {
+  id: string;
   header: string;
-  accessorKey: keyof T;
-  cell?: (info: any) => React.ReactNode;
-  enableSorting?: boolean;
+  accessorKey?: string;
+  cell?: (args: any) => React.ReactNode;
 }
 
 export interface FilterOption {
   field: string;
   label: string;
-  type: "text" | "select";
-  options?: { label: string; value: string }[];
+  type: 'select' | 'boolean';
+  options?: Array<{
+    value: string;
+    label: string;
+  }>;
 }
 
-export interface Pagination {
-  pageIndex: number;
-  pageSize: number;
-  pageCount: number;
-  total: number;
+export interface ErrorInfo {
+  componentStack: string;
 }
 
-// Add LoginCredentials type
-export interface LoginCredentials {
-  email: string;
-  password: string;
-  grant_type?: string;
-  token_type?: string;
+export interface ConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  confirmText: string;
+  cancelText: string;
+  onConfirm: () => void;
+  variant?: "default" | "destructive";
+  isLoading?: boolean;
+}
+
+export interface GroupFormProps {
+  group?: Group;
+  onSave: (values: any) => Promise<void>;
+  isLoading?: boolean;
+  onCancel?: () => void;
+}
+
+export interface ScopeFormProps {
+  scope?: Scope;
+  onSave: (values: any) => Promise<void>;
+  isLoading?: boolean;
+  onCancel?: () => void;
 }

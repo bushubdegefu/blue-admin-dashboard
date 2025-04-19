@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Popover,
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, PlusCircle, X } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface RelatedItem {
   id: string;
@@ -40,7 +42,7 @@ export function RelatedItemsCard({
   const [searchTerm, setSearchTerm] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const filteredAttachedItems =attachedItems?.filter(item =>
+  const filteredAttachedItems = attachedItems?.filter(item =>
     item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -52,9 +54,9 @@ export function RelatedItemsCard({
   };
 
   return (
-    <div className="bg-white border rounded-lg overflow-hidden">
+    <div className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all hover:shadow-md">
       <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
-        <h3 className="font-medium text-gray-900">{title}</h3>
+        <h3 className="font-medium text-gray-900 flex items-center gap-2">{title}</h3>
         {canManage && onAddItems && (
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
@@ -67,21 +69,27 @@ export function RelatedItemsCard({
                 Add {entityType}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[250px] p-2">
+            <PopoverContent className="w-[280px] p-2">
               <Command>
                 <CommandInput placeholder={`Search ${entityType.toLowerCase()}...`} />
-                <CommandList>
+                <CommandList className="max-h-[200px]">
                   {availableItems.length > 0 ? (
                     availableItems.map((item) => (
                       <CommandItem
                         key={item.id}
                         onSelect={() => handleAdd(item.id)}
+                        className="flex items-center cursor-pointer hover:bg-gray-100"
                       >
-                        {item.name}
+                        <div className="flex-1 truncate">
+                          {item.name}
+                          {item.description && (
+                            <p className="text-xs text-gray-500 truncate mt-0.5">{item.description}</p>
+                          )}
+                        </div>
                       </CommandItem>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 px-2 py-4">
+                    <div className="text-sm text-gray-500 px-2 py-4 text-center">
                       No {entityType.toLowerCase()}s available
                     </div>
                   )}
@@ -104,42 +112,44 @@ export function RelatedItemsCard({
                 className="pl-9"
               />
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-              {filteredAttachedItems.length > 0 ? (
-                filteredAttachedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                  >
-                    <div className="flex-1">
-                      <span className="font-medium">{item?.name}</span>
-                      {item.description && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {item.description}
-                        </p>
+            <ScrollArea className="max-h-60 pr-2">
+              <div className="space-y-2">
+                {filteredAttachedItems.length > 0 ? (
+                  filteredAttachedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{item?.name}</div>
+                        {item.description && (
+                          <p className="text-xs text-gray-500 truncate">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      {canManage && onRemoveItem && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-gray-400 hover:text-red-500 flex-shrink-0"
+                          onClick={() => onRemoveItem(item.id)}
+                          title={`Remove ${item?.name}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       )}
                     </div>
-                    {canManage && onRemoveItem && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-gray-400 hover:text-red-500"
-                        onClick={() => onRemoveItem(item.id)}
-                        title={`Remove ${item?.name}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-sm text-gray-500">
+                    No results match your search
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-sm text-gray-500">
-                  No results match your search
-                </div>
-              )}
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <Badge variant="outline" className="text-xs">
+                )}
+              </div>
+            </ScrollArea>
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
+              <Badge variant="outline" className="text-xs text-gray-600">
                 {attachedItems?.length} {entityType.toLowerCase()}
                 {attachedItems?.length !== 1 && "s"}
               </Badge>

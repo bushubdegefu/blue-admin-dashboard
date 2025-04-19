@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Resource, Scope } from "@/types";
+import { Resource } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,46 +20,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 const resourceFormSchema = z.object({
   name: z.string().min(1, "Resource name is required"),
-  route_path: z.string().min(1, "Route path is required"),
-  method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]),
   description: z.string().optional(),
-  scope_id: z.string().optional(),
+  route_path: z.string().min(1, "Route path is required"),
+  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+  active: z.boolean().default(true),
 });
 
 type ResourceFormValues = z.infer<typeof resourceFormSchema>;
 
 interface ResourceFormProps {
   resource?: Resource;
-  scopes: Scope[];
-  onSave: (values: ResourceFormValues) => Promise<void>;
+  onSave?: (values: ResourceFormValues) => Promise<void>;
   isLoading?: boolean;
+  onCancel?: () => void;
 }
 
 export function ResourceForm({ 
   resource, 
-  scopes, 
   onSave, 
-  isLoading = false 
+  isLoading = false,
+  onCancel
 }: ResourceFormProps) {
   const form = useForm<ResourceFormValues>({
     resolver: zodResolver(resourceFormSchema),
     defaultValues: {
       name: resource?.name || "",
-      route_path: resource?.route_path || "",
-      method: resource?.method || "GET",
       description: resource?.description || "",
-      scope_id: resource?.scope_id || undefined,
+      route_path: resource?.route_path || "",
+      method: resource?.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE" || "GET",
+      active: resource?.active ?? true,
     },
   });
 
   const handleSubmit = async (values: ResourceFormValues) => {
     try {
-      await onSave(values);
+      if (onSave) {
+        await onSave(values);
+      }
       if (!resource) {
         form.reset();
       }
@@ -81,51 +84,12 @@ export function ResourceForm({
               <FormItem>
                 <FormLabel>Resource Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="User List" {...field} />
+                  <Input placeholder="Get User" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="route_path"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Route Path</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/api/users" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>HTTP Method</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="GET">GET</SelectItem>
-                      <SelectItem value="POST">POST</SelectItem>
-                      <SelectItem value="PUT">PUT</SelectItem>
-                      <SelectItem value="PATCH">PATCH</SelectItem>
-                      <SelectItem value="DELETE">DELETE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
           <FormField
             control={form.control}
             name="description"
@@ -134,7 +98,7 @@ export function ResourceForm({
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Describe the purpose of this resource" 
+                    placeholder="Describe what this resource does" 
                     {...field} 
                     value={field.value || ""}
                   />
@@ -145,35 +109,71 @@ export function ResourceForm({
           />
           <FormField
             control={form.control}
-            name="scope_id"
+            name="route_path"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Associated Scope</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+                <FormLabel>Route Path</FormLabel>
+                <FormControl>
+                  <Input placeholder="/api/v1/users" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="method"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>HTTP Method</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a scope" />
+                      <SelectValue placeholder="Select HTTP Method" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {scopes.map((scope) => (
-                      <SelectItem key={scope.id} value={scope.id}>
-                        {scope.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="PATCH">PATCH</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="active"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Status</FormLabel>
+                  <div className="text-sm text-muted-foreground">
+                    {field.value
+                      ? "This resource is active and available"
+                      : "This resource is inactive and unavailable"}
+                  </div>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Saving..." : resource ? "Update Resource" : "Create Resource"}
           </Button>
