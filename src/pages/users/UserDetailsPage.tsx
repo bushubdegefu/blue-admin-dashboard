@@ -71,6 +71,9 @@ const UserDetailsPage = () => {
     onSuccess: () => {
       toast.success("Group added to user successfully");
       queryClient.invalidateQueries({ queryKey: ['user', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_comp_groups', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_groups', id] });
+
     },
     onError: (err: any) => {
       toast.error(`Failed to add group: ${err.message}`);
@@ -85,6 +88,8 @@ const UserDetailsPage = () => {
     onSuccess: () => {
       toast.success("Group removed from user successfully");
       queryClient.invalidateQueries({ queryKey: ['user', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_comp_groups', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_groups', id] });
     },
     onError: (err: any) => {
       toast.error(`Failed to remove group: ${err.message}`);
@@ -100,6 +105,8 @@ const UserDetailsPage = () => {
     onSuccess: () => {
       toast.success("Scope added to user successfully");
       queryClient.invalidateQueries({ queryKey: ['user', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_comp_scopes', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_scopes', id] });
     },
     onError: (err: any) => {
       toast.error(`Failed to add scope: ${err.message}`);
@@ -114,6 +121,8 @@ const UserDetailsPage = () => {
     onSuccess: () => {
       toast.success("Scope removed from user successfully");
       queryClient.invalidateQueries({ queryKey: ['user', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_comp_scopes', id] });
+      queryClient.invalidateQueries({ queryKey: ['user_scopes', id] });
     },
     onError: (err: any) => {
       toast.error(`Failed to remove scope: ${err.message}`);
@@ -178,6 +187,7 @@ const { data: scopeItemsAvailable } = useQuery({
     queryFn: () => userService.getAttachedScopesForUser(id),
   });
 
+  
 // ######################
   return (
     <>
@@ -241,8 +251,8 @@ const { data: scopeItemsAvailable } = useQuery({
         <div className="space-y-6">
           <RelatedItemsCard
             title="Groups"
-            attachedItems={groupItemsAttached || []}
-            availableItems={groupItemsAvailable || []}
+            attachedItems={groupItemsAttached?.data || []}
+            availableItems={groupItemsAvailable?.data || []}
             entityType="Group"
             emptyMessage="This user is not a member of any groups."
             onAddItems={handleAddGroup}
@@ -252,8 +262,8 @@ const { data: scopeItemsAvailable } = useQuery({
           
           <RelatedItemsCard
             title="Scopes"
-            availableItems={scopeItemsAvailable || []}
-            attachedItems={scopeItemsAttached || []}
+            availableItems={scopeItemsAvailable?.data || []}
+            attachedItems={scopeItemsAttached?.data || []}
             entityType="Scope"
             emptyMessage="This user has no assigned scopes."
             onAddItems={handleAddScope}
