@@ -59,7 +59,7 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingUsers
   } = useQuery({
     queryKey: ["group_users", id, usersPage, pageSize],
-    queryFn: () => groupService.getGroupUsers(id as string, { page: usersPage, limit: pageSize }),
+    queryFn: () => groupService.getGroupUsers(-{ groupId: id, page: usersPage, limit: pageSize }),
     enabled: !!id && activeTab === "users"
   });
 
@@ -69,7 +69,7 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingScopes
   } = useQuery({
     queryKey: ["group_scopes", id, scopesPage, pageSize],
-    queryFn: () => groupService.getGroupScopes(id as string, { page: scopesPage, limit: pageSize }),
+    queryFn: () => groupService.getGroupScope({groupId: id, page: scopesPage, limit: pageSize }),
     enabled: !!id && activeTab === "scopes"
   });
 
@@ -359,8 +359,8 @@ const GroupDetailsPage = () => {
                   columns={userColumns}
                   data={usersData?.data || []}
                   isLoading={isLoadingUsers}
-                  pageCount={usersData?.meta?.totalPages || 1}
-                  totalItems={usersData?.meta?.totalItems || 0}
+                  pageCount={usersData?.data.totalPages || 1}
+                  totalItems={usersData?.data?.totalItems || 0}
                   currentPage={usersPage}
                   pageSize={pageSize}
                   onPageChange={(page) => setUsersPage(page)}
@@ -382,8 +382,8 @@ const GroupDetailsPage = () => {
                   columns={scopeColumns}
                   data={scopesData?.data || []}
                   isLoading={isLoadingScopes}
-                  pageCount={scopesData?.meta?.totalPages || 1}
-                  totalItems={scopesData?.meta?.totalItems || 0}
+                  pageCount={scopesData?.data?.totalPages || 1}
+                  totalItems={scopesData?.data?.totalItems || 0}
                   currentPage={scopesPage}
                   pageSize={pageSize}
                   onPageChange={(page) => setScopesPage(page)}

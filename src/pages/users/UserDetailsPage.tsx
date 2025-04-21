@@ -41,6 +41,31 @@ const UserDetailsPage = () => {
 
   const user = userResponse?.data;
 
+
+   // Fetch complementary permissions and groups data
+   const { data: groupItemsAvailable } = useQuery({
+    queryKey: ["user_comp_groups", id],
+    queryFn: () => userService.getAvailableGroupsForUser(id),
+  });
+
+  const { data: groupItemsAttached } = useQuery({
+    queryKey: ["user_groups", id],
+    queryFn: () => userService.getAttachedGroupsForUser(id),
+
+  });
+  
+
+const { data: scopeItemsAvailable } = useQuery({
+    queryKey: ["user_comp_scopes", id],
+    queryFn: () => userService.getAvailableScopesForUser(id),
+    
+  });
+
+  const { data: scopeItemsAttached } = useQuery({
+    queryKey: ["user_scopes", id],
+    queryFn: () => userService.getAttachedScopesForUser(id),
+  });
+
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: (userData: any) => userService.updateUser(userData),
@@ -161,31 +186,7 @@ const UserDetailsPage = () => {
     return null;
   }
 
-  // ############
-  // Convert user.groups to any[] for the RelatedItemsCard component
-   // Fetch complementary permissions and groups data
-  const { data: groupItemsAvailable } = useQuery({
-    queryKey: ["user_comp_groups", id],
-    queryFn: () => userService.getAvailableGroupsForUser(id),
-  });
 
-  const { data: groupItemsAttached } = useQuery({
-    queryKey: ["user_groups", id],
-    queryFn: () => userService.getAttachedGroupsForUser(id),
-
-  });
-  
-
-const { data: scopeItemsAvailable } = useQuery({
-    queryKey: ["scope_comp_groups", id],
-    queryFn: () => userService.getAvailableScopesForUser(id),
-    
-  });
-
-  const { data: scopeItemsAttached } = useQuery({
-    queryKey: ["scope_groups", id],
-    queryFn: () => userService.getAttachedScopesForUser(id),
-  });
 
   
 // ######################

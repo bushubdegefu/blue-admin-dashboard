@@ -44,7 +44,7 @@ const LoginPage = () => {
         grant_type: "authorization_code",
         email: values.username,
         password: values.password,
-        token_type: "Bearer",
+        token: "Bearer",
       });
       navigate("/")
       // Auth context will handle the redirect and toast notifications

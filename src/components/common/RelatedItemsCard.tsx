@@ -113,7 +113,7 @@ export function RelatedItemsCard({
               />
             </div>
             <ScrollArea className="max-h-60 pr-2">
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-y-auto">
                 {filteredAttachedItems.length > 0 ? (
                   filteredAttachedItems.map((item) => (
                     <div

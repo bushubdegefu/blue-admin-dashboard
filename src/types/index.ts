@@ -1,3 +1,9 @@
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  grant_type: string;
+  token: string;
+}
 
 export interface User {
   id: string;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +5,13 @@ import { toast } from "sonner";
 import { Badge, Pencil, Trash2, Users, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
 import { DataTable } from "@/components/common/DataTable";
@@ -15,7 +20,7 @@ import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ScopeForm } from "@/components/forms/ScopeForm";
 import { scopeService } from "@/api/scopeService";
-import { Scope, TableColumn, FilterOption, RelatedItem } from "@/types";
+import { Scope, TableColumn, FilterOption } from "@/types";
 
 const ScopeDetailsPage = () => {
   const { id } = useParams();
@@ -26,10 +31,10 @@ const ScopeDetailsPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch scope details
-  const { 
+  const {
     data: scopeResponse,
     isLoading,
-    error 
+    error,
   } = useQuery({
     queryKey: ["scope", id],
     queryFn: () => scopeService.getScopeById(id as string),
@@ -39,11 +44,22 @@ const ScopeDetailsPage = () => {
         if (error) {
           toast.error(`Error loading scope: ${(error as any).message}`);
         }
-      }
-    }
+      },
+    },
   });
 
   const scope = scopeResponse?.data;
+
+  // Fetch complementary resources of scope
+  const { data: resourceItemsAvailable } = useQuery({
+    queryKey: ["scope_comp_resources", id],
+    queryFn: () => scopeService.getAvailableGroupsForScope(id),
+  });
+
+  const { data: resourceItemsAttached } = useQuery({
+    queryKey: ["scope_resources", id],
+    queryFn: () => scopeService.getAttachedGroupsForUser(id),
+  });
 
   // Delete scope mutation
   const deleteScopeMutation = useMutation({
@@ -56,15 +72,16 @@ const ScopeDetailsPage = () => {
     onError: (error: Error) => {
       toast.error(`Failed to delete scope: ${error.message}`);
       setIsDeleteDialogOpen(false);
-    }
+    },
   });
 
   // Update scope mutation
   const updateScopeMutation = useMutation({
-    mutationFn: (data: any) => scopeService.updateScope({
-      scopeId: id as string,
-      scopeData: data
-    }),
+    mutationFn: (data: any) =>
+      scopeService.updateScope({
+        scopeId: id as string,
+        scopeData: data,
+      }),
     onSuccess: () => {
       toast.success("Scope updated successfully");
       queryClient.invalidateQueries({ queryKey: ["scope", id] });
@@ -72,36 +89,38 @@ const ScopeDetailsPage = () => {
     },
     onError: (error: Error) => {
       toast.error(`Failed to update scope: ${error.message}`);
-    }
+    },
   });
 
   // Resource management mutations
   const addResourceMutation = useMutation({
-    mutationFn: (resourceId: string) => scopeService.addResourceScope({
-      scopeId: id as string,
-      resourceId
-    }),
+    mutationFn: (resourceId: string) =>
+      scopeService.addResourceScope({
+        scopeId: id as string,
+        resourceId,
+      }),
     onSuccess: () => {
       toast.success("Resource added to scope successfully");
       queryClient.invalidateQueries({ queryKey: ["scope", id] });
     },
     onError: (err: any) => {
       toast.error(`Failed to add resource: ${err.message}`);
-    }
+    },
   });
 
   const removeResourceMutation = useMutation({
-    mutationFn: (resourceId: string) => scopeService.deleteResourceScope({
-      scopeId: id as string,
-      resourceId
-    }),
+    mutationFn: (resourceId: string) =>
+      scopeService.deleteResourceScope({
+        scopeId: id as string,
+        resourceId,
+      }),
     onSuccess: () => {
       toast.success("Resource removed from scope successfully");
       queryClient.invalidateQueries({ queryKey: ["scope", id] });
     },
     onError: (err: any) => {
       toast.error(`Failed to remove resource: ${err.message}`);
-    }
+    },
   });
 
   const handleDeleteScope = () => {
@@ -130,33 +149,38 @@ const ScopeDetailsPage = () => {
   }
 
   // Related items
-  const resources = (scope.resources || []).map(resource => ({
+  const resources = (scope.resources || []).map((resource) => ({
     id: resource.id,
     name: resource.name,
     description: `${resource.method} ${resource.route_path}`,
-    link: `/resources/${resource.id}`
+    link: `/resources/${resource.id}`,
   }));
 
-  const groups = (scope.groups || []).map(group => ({
+  const groups = (scope.groups || []).map((group) => ({
     id: group.id,
     name: group.name,
     description: group.description || "",
-    link: `/groups/${group.id}`
+    link: `/groups/${group.id}`,
   }));
 
-  const users = (scope.users || []).map(user => ({
+  const users = (scope.users || []).map((user) => ({
     id: user.id,
-    name: `${user.first_name} ${user.middle_name ? user.middle_name + " " : ""}${user.last_name}`,
+    name: `${user.first_name} ${
+      user.middle_name ? user.middle_name + " " : ""
+    }${user.last_name}`,
     description: user.email,
-    link: `/users/${user.id}`
+    link: `/users/${user.id}`,
   }));
 
   return (
     <>
-      <PageHeader title={scope.name} description={scope.description || "No description"}>
+      <PageHeader
+        title={scope.name}
+        description={scope.description || "No description"}
+      >
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => setIsEditDialogOpen(true)}
           >
@@ -181,12 +205,8 @@ const ScopeDetailsPage = () => {
             <TabsTrigger value="resources">
               Resources ({resources.length})
             </TabsTrigger>
-            <TabsTrigger value="groups">
-              Groups ({groups.length})
-            </TabsTrigger>
-            <TabsTrigger value="users">
-              Users ({users.length})
-            </TabsTrigger>
+            <TabsTrigger value="groups">Groups ({groups.length})</TabsTrigger>
+            <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6 space-y-6">
@@ -201,7 +221,9 @@ const ScopeDetailsPage = () => {
                     <div>{scope.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">Description</div>
+                    <div className="text-sm text-gray-500 mb-1">
+                      Description
+                    </div>
                     <div>{scope.description || "No description"}</div>
                   </div>
                   <div>
@@ -215,9 +237,10 @@ const ScopeDetailsPage = () => {
                 </CardContent>
               </Card>
 
-              <RelatedItemsCard 
+              <RelatedItemsCard
                 title="Associated Resources"
-                items={resources.slice(0, 5)}
+                attachedItems={resourceItemsAttached?.data || []}
+                availableItems={resourceItemsAvailable?.data || []}
                 entityType="Resource"
                 emptyMessage="No resources associated with this scope"
                 onAddItems={() => setActiveTab("resources")}
@@ -225,7 +248,7 @@ const ScopeDetailsPage = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <RelatedItemsCard 
                 title="Associated Groups"
                 items={groups.slice(0, 5)}
@@ -243,29 +266,39 @@ const ScopeDetailsPage = () => {
                 onAddItems={() => setActiveTab("users")}
                 canManage={users.length > 5}
               />
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="resources" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Resources in this Scope</CardTitle>
-                <CardDescription>Manage resources associated with this scope</CardDescription>
+                <CardDescription>
+                  Manage resources associated with this scope
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {resources.length > 0 ? (
                   <div className="space-y-4">
-                    {resources.map(resource => (
-                      <div key={resource.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    {resources.map((resource) => (
+                      <div
+                        key={resource.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                      >
                         <div>
-                          <Link to={resource.link || "#"} className="font-medium text-admin-600 hover:underline">
+                          <Link
+                            to={resource.link || "#"}
+                            className="font-medium text-admin-600 hover:underline"
+                          >
                             {resource.name}
                           </Link>
-                          <p className="text-sm text-gray-500">{resource.description}</p>
+                          <p className="text-sm text-gray-500">
+                            {resource.description}
+                          </p>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleRemoveResource(resource.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />

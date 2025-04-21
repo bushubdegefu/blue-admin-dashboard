@@ -2,7 +2,7 @@
 import { toast } from "sonner";
 import { authService } from "./authService";
 
-const API_BASE_URL = "http://localhost:7500/api/v1";
+const API_BASE_URL = "http://192.168.0.178:7500/api/v1";
 
 // Default headers for all requests
 const defaultHeaders = {

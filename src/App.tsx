@@ -38,7 +38,7 @@ import NewAppPage from "./pages/apps/NewAppPage";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 3,
       refetchOnWindowFocus: false,
     },
   },
