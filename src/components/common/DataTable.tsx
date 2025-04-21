@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue, 
 } from "@/components/ui/select";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -71,6 +72,22 @@ export function DataTable<TData, TValue>({
     pageSize: pagination?.pageSize ?? 10,
   });
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+  
+  // Use debounce for search to avoid too many API calls
+  const debouncedSearchTerm = useDebounce(globalFilter, 500);
+  
+  // Effect to call onFilterChange when debounced search term changes
+  useEffect(() => {
+    if (onFilterChange) {
+      const newFilters = { ...activeFilters };
+      if (debouncedSearchTerm) {
+        newFilters._search = debouncedSearchTerm;
+      } else {
+        delete newFilters._search;
+      }
+      onFilterChange(newFilters);
+    }
+  }, [debouncedSearchTerm, onFilterChange]);
 
   // Update local pagination when external pagination changes
   useEffect(() => {
@@ -166,17 +183,7 @@ export function DataTable<TData, TValue>({
   const handleGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGlobalFilter(value);
-    
-    // Add global search to filters if external filter handler is provided
-    if (onFilterChange) {
-      const newFilters = { ...activeFilters };
-      if (value) {
-        newFilters._search = value;
-      } else {
-        delete newFilters._search;
-      }
-      onFilterChange(newFilters);
-    }
+    // onFilterChange is called by the debounce effect
   };
 
   const hasActiveFilters = Object.keys(activeFilters).length > 0 || globalFilter;
@@ -344,51 +351,6 @@ export function DataTable<TData, TValue>({
             </table>
           </div>
         )}
-        <div className="border-t px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <span>
-              Page {localPagination.pageIndex + 1} of{" "}
-              {pagination?.pageCount || table.getPageCount()}
-            </span>
-            <span>
-              | Showing {table.getRowModel().rows.length} of {pagination?.total || data.length} records
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage() || isLoading}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage() || isLoading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage() || isLoading}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage() || isLoading}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );

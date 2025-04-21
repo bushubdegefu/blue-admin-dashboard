@@ -1,35 +1,33 @@
 
-import { useState, Suspense } from "react";
-import { Outlet } from "react-router-dom";
-import Sidebar from "@/components/layout/Sidebar";
-import ErrorBoundary from "@/components/layout/ErrorBoundary";
+import { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
-import { Loader2 } from "lucide-react";
+import { UserProfileMenu } from "./UserProfileMenu";
 
 const MainLayout = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const location = useLocation();
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen">
       <Sidebar
         mobileSidebarOpen={mobileSidebarOpen}
         setMobileSidebarOpen={setMobileSidebarOpen}
       />
-      
-      <div className="flex-1 overflow-auto">
-        <div className="container mx-auto py-8 px-4 md:px-6">
-          <ErrorBoundary>
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            }>
-              <Outlet />
-            </Suspense>
+      <div className="flex flex-col flex-1">
+        <header className="border-b h-14 flex items-center justify-end px-6 bg-white">
+          <div className="flex items-center gap-4">
+            <UserProfileMenu />
+          </div>
+        </header>
+        <main className="flex-1 p-6 bg-gray-50">
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
           </ErrorBoundary>
-        </div>
+        </main>
       </div>
-      
       <Toaster />
     </div>
   );

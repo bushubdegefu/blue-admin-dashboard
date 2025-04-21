@@ -69,30 +69,32 @@ export function RelatedItemsCard({
                 Add {entityType}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-2">
+            <PopoverContent className="w-[300px] p-2">
               <Command>
                 <CommandInput placeholder={`Search ${entityType.toLowerCase()}...`} />
-                <CommandList className="max-h-[200px]">
-                  {availableItems.length > 0 ? (
-                    availableItems.map((item) => (
-                      <CommandItem
-                        key={item.id}
-                        onSelect={() => handleAdd(item.id)}
-                        className="flex items-center cursor-pointer hover:bg-gray-100"
-                      >
-                        <div className="flex-1 truncate">
-                          {item.name}
-                          {item.description && (
-                            <p className="text-xs text-gray-500 truncate mt-0.5">{item.description}</p>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500 px-2 py-4 text-center">
-                      No {entityType.toLowerCase()}s available
-                    </div>
-                  )}
+                <CommandList className="max-h-[200px] overflow-auto">
+                  <ScrollArea className="h-[200px]">
+                    {availableItems.length > 0 ? (
+                      availableItems.map((item) => (
+                        <CommandItem
+                          key={item.id}
+                          onSelect={() => handleAdd(item.id)}
+                          className="flex items-center cursor-pointer hover:bg-gray-100 p-2"
+                        >
+                          <div className="flex-1 truncate">
+                            <div className="font-medium">{item.name}</div>
+                            {item.description && (
+                              <p className="text-xs text-gray-500 truncate mt-0.5">{item.description}</p>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500 px-2 py-4 text-center">
+                        No {entityType.toLowerCase()}s available
+                      </div>
+                    )}
+                  </ScrollArea>
                 </CommandList>
               </Command>
             </PopoverContent>
@@ -101,7 +103,7 @@ export function RelatedItemsCard({
       </div>
 
       <div className="p-4">
-        {attachedItems.length > 0 ? (
+        {attachedItems && attachedItems.length > 0 ? (
           <>
             <div className="mb-4 relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />

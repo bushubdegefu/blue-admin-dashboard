@@ -10,6 +10,8 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface PaginatedDataTableProps {
   columns: any[];
@@ -79,7 +81,29 @@ export function PaginatedDataTable({
     }
     
     return (
-      <div className="mt-4 flex justify-center">
+      <div className="mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="page-size">Items per page:</Label>
+          <Select 
+            value={String(pagination.pageSize)} 
+            onValueChange={(value) => handlePageSizeChange(parseInt(value))}
+          >
+            <SelectTrigger id="page-size" className="w-[80px]">
+              <SelectValue placeholder={pagination.pageSize} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {pageCount}
+          </span>
+        </div>
+        
         <Pagination>
           <PaginationContent>
             <PaginationItem>
@@ -146,6 +170,12 @@ export function PaginatedDataTable({
     }
   };
 
+  const handlePageSizeChange = (newPageSize: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(newPageSize);
+    }
+  };
+
   return (
     <div>
       <DataTable
@@ -156,7 +186,7 @@ export function PaginatedDataTable({
         searchPlaceholder={searchPlaceholder}
         pagination={pagination}
         onPageChange={handlePageChange}
-        onPageSizeChange={onPageSizeChange}
+        onPageSizeChange={handlePageSizeChange}
         onFilterChange={onFilterChange}
       />
       {renderPagination()}

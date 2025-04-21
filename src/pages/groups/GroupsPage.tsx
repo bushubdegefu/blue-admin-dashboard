@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
-import { Group, TableColumn, FilterOption } from "@/types";
+import { Group, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -69,11 +70,12 @@ const GroupsPage = () => {
 
   const columnHelper = createColumnHelper<Group>();
   
-  const columns: TableColumn<Group>[] = [
+  const columns = [
     {
+      id: "name",
       header: "Name",
       accessorKey: "name",
-      cell: (info) => (
+      cell: (info: any) => (
         <div>
           <div className="font-medium">{info.getValue() as string}</div>
           <div className="text-xs text-gray-500">ID: {info.row.original.id}</div>
@@ -81,25 +83,28 @@ const GroupsPage = () => {
       ),
     },
     {
+      id: "description",
       header: "Description",
       accessorKey: "description",
-      cell: (info) => (
+      cell: (info: any) => (
         <div className="max-w-xs truncate">
           {info.getValue() as string || <span className="text-gray-400 text-xs">No description</span>}
         </div>
       ),
     },
     {
+      id: "status",
       header: "Status",
       accessorKey: "active",
-      cell: (info) => (
+      cell: (info: any) => (
         <StatusBadge active={info.getValue() as boolean} />
       ),
     },
     {
+      id: "users",
       header: "Users",
       accessorKey: "users",
-      cell: (info) => {
+      cell: (info: any) => {
         const users = info.row.original.users || [];
         const count = users.length;
         return (
@@ -108,9 +113,10 @@ const GroupsPage = () => {
       },
     },
     {
+      id: "app",
       header: "App",
       accessorKey: "app",
-      cell: (info) => {
+      cell: (info: any) => {
         const app = info.getValue() as any;
         return app ? (
           <Link 
@@ -125,9 +131,10 @@ const GroupsPage = () => {
       },
     },
     {
+      id: "actions",
       header: "Actions",
       accessorKey: "id",
-      cell: (info) => (
+      cell: (info: any) => (
         <ActionMenu
           actions={[
             {

@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
-import { App as AppType, TableColumn, FilterOption } from "@/types";
+import { App as AppType, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
@@ -69,11 +70,12 @@ const AppsPage = () => {
 
   const columnHelper = createColumnHelper<AppType>();
   
-  const columns: TableColumn<AppType>[] = [
+  const columns = [
     {
+      id: "name",
       header: "Name",
       accessorKey: "name",
-      cell: (info) => (
+      cell: (info: any) => (
         <div>
           <div className="font-medium">{info.getValue() as string}</div>
           <div className="text-xs text-gray-500">ID: {info.row.original.id}</div>
@@ -81,34 +83,38 @@ const AppsPage = () => {
       ),
     },
     {
+      id: "uuid",
       header: "UUID",
       accessorKey: "uuid",
-      cell: (info) => (
+      cell: (info: any) => (
         <div className="font-mono text-xs truncate max-w-[200px]">
           {info.getValue() as string}
         </div>
       ),
     },
     {
+      id: "description",
       header: "Description",
       accessorKey: "description",
-      cell: (info) => (
+      cell: (info: any) => (
         <div className="max-w-xs truncate">
           {info.getValue() as string || <span className="text-gray-400 text-xs">No description</span>}
         </div>
       ),
     },
     {
+      id: "status",
       header: "Status",
       accessorKey: "active",
-      cell: (info) => (
+      cell: (info: any) => (
         <StatusBadge active={info.getValue() as boolean} />
       ),
     },
     {
+      id: "groups",
       header: "Groups",
       accessorKey: "groups",
-      cell: (info) => {
+      cell: (info: any) => {
         const groups = info.row.original.groups || [];
         const count = groups.length;
         return (
@@ -117,11 +123,17 @@ const AppsPage = () => {
       },
     },
     {
+      id: "actions",
       header: "Actions",
       accessorKey: "id",
-      cell: (info) => (
+      cell: (info: any) => (
         <ActionMenu
           actions={[
+            {
+              label: "View Details",
+              icon: <Eye className="h-4 w-4 mr-2" />,
+              onClick: () => navigate(`/apps/${info.getValue()}`),
+            },
             {
               label: "Delete",
               icon: <Trash2 className="h-4 w-4 mr-2" />,
