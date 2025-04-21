@@ -27,17 +27,17 @@ export const scopeService = {
     return api.delete(`/blue_admin/scope/${scopeId}`);
   },
 //###############################################
-// Now realationshipQeury Endpoints(Many to Many)
+// Group-Scope relationship endpoints (Many to Many)
 //###############################################
-	getScopeGroup: (data)=>{
-		return api.get(`/blue_admin/groupscope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+	getScopeGroup: (data) => {
+		return api.get(`/blue_admin/groupscope/${data?.scopeId}`, { page: data?.page, size: data?.size });
 	},
 
-	// Get groups that can be assigned to a group
+	// Get groups that can be assigned to a scope
 	getAvailableGroupsForScope: (scopeId) => {
 	    return api.get(`/blue_admin/groupcomplementscope/${scopeId}`);
 	},
-	// Get permissions that can be assigned to a group
+	// Get groups already assigned to a scope
 	getAttachedGroupsForScope: (scopeId) => {
 	    return api.get(`/blue_admin/groupnoncomplementscope/${scopeId}`);
 	},
@@ -50,17 +50,17 @@ export const scopeService = {
 		return api.delete(`/blue_admin/groupscope/${data?.groupId}/${data?.scopeId}`);
 	},
 //###############################################
-// Now realationshipQeury Endpoints(one to Many)
+// Resource-Scope relationship endpoints (Many to Many)
 //###############################################
-getScopeResource: (data)=>{
-		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+	getScopeResource: (data) => {
+		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`, { page: data?.page, size: data?.size });
 	},
 
-	// Get resources that can be assigned to a resource
+	// Get resources that can be assigned to a scope
 	getAvailableResourcesForScope: (scopeId) => {
 	    return api.get(`/blue_admin/resourcecomplementscope/${scopeId}`);
 	},
-	// Get permissions that can be assigned to a resource
+	// Get resources already assigned to a scope
 	getAttachedResourcesForScope: (scopeId) => {
 	    return api.get(`/blue_admin/resourcenoncomplementscope/${scopeId}`);
 	},
@@ -72,6 +72,4 @@ getScopeResource: (data)=>{
 	deleteResourceScope: (data) => {
 		return api.delete(`/blue_admin/resourcescope/${data?.resourceId}/${data?.scopeId}`);
 	},
-
 }
-

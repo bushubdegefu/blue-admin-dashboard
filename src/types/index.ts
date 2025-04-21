@@ -1,3 +1,4 @@
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -79,7 +80,7 @@ export interface TableColumn {
 export interface FilterOption {
   field: string;
   label: string;
-  type: 'select' | 'boolean';
+  type: 'select' | 'boolean' | 'text';
   options?: Array<{
     value: string;
     label: string;
@@ -114,4 +115,12 @@ export interface ScopeFormProps {
   onSave: (values: any) => Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;
+}
+
+export interface ResourceFormProps {
+  resource?: Resource;
+  onSave: (values: any) => Promise<void>;
+  isLoading?: boolean;
+  onCancel?: () => void;
+  scopes?: Scope[];
 }

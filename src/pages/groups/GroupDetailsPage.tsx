@@ -9,7 +9,8 @@ import {
   Users, 
   CheckCircle2,
   ExternalLink,
-  MapPin
+  MapPin,
+  PlusCircle
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,10 @@ import { ActionMenu } from "@/components/common/ActionMenu";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { GroupForm } from "@/components/forms/GroupForm";
+import { EntitySelector } from "@/components/common/EntitySelector";
 import { groupService } from "@/api/groupService";
-import { Group, TableColumn, FilterOption } from "@/types";
+import { Group, TableColumn } from "@/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const GroupDetailsPage = () => {
   const { id } = useParams();
@@ -31,6 +34,8 @@ const GroupDetailsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddUsersDialogOpen, setIsAddUsersDialogOpen] = useState(false);
+  const [isAddScopesDialogOpen, setIsAddScopesDialogOpen] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [scopesPage, setScopesPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -59,7 +64,7 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingUsers
   } = useQuery({
     queryKey: ["group_users", id, usersPage, pageSize],
-    queryFn: () => groupService.getGroupUsers(-{ groupId: id, page: usersPage, limit: pageSize }),
+    queryFn: () => groupService.getGroupUsers({ groupId: id, page: usersPage, size: pageSize }),
     enabled: !!id && activeTab === "users"
   });
 
@@ -69,8 +74,28 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingScopes
   } = useQuery({
     queryKey: ["group_scopes", id, scopesPage, pageSize],
-    queryFn: () => groupService.getGroupScope({groupId: id, page: scopesPage, limit: pageSize }),
+    queryFn: () => groupService.getGroupScopes({ groupId: id, page: scopesPage, size: pageSize }),
     enabled: !!id && activeTab === "scopes"
+  });
+
+  // Fetch available users for the group
+  const { 
+    data: availableUsersData,
+    isLoading: isLoadingAvailableUsers
+  } = useQuery({
+    queryKey: ["available_users", id],
+    queryFn: () => groupService.getAvailableUsersForGroup(id as string),
+    enabled: !!id && isAddUsersDialogOpen
+  });
+
+  // Fetch available scopes for the group
+  const { 
+    data: availableScopesData,
+    isLoading: isLoadingAvailableScopes
+  } = useQuery({
+    queryKey: ["available_scopes", id],
+    queryFn: () => groupService.getAvailableScopesForGroup(id as string),
+    enabled: !!id && isAddScopesDialogOpen
   });
 
   const group = groupResponse?.data;
@@ -105,15 +130,33 @@ const GroupDetailsPage = () => {
     }
   });
 
+  // Add user to group mutation
+  const addUserMutation = useMutation({
+    mutationFn: (userId: string) => groupService.addUserToGroup({
+      userId,
+      groupId: id as string
+    }),
+    onSuccess: () => {
+      toast.success("User added to group successfully");
+      queryClient.invalidateQueries({ queryKey: ["group_users", id] });
+      queryClient.invalidateQueries({ queryKey: ["available_users", id] });
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add user: ${error.message}`);
+    }
+  });
+
   // Remove user from group mutation
   const removeUserMutation = useMutation({
-    mutationFn: (userId: string) => groupService.removeUserFromGroup({
-      groupId: id as string,
-      userId
+    mutationFn: (userId: string) => groupService.deleteUserFromGroup({
+      userId,
+      groupId: id as string
     }),
     onSuccess: () => {
       toast.success("User removed from group");
       queryClient.invalidateQueries({ queryKey: ["group_users", id] });
+      queryClient.invalidateQueries({ queryKey: ["available_users", id] });
       queryClient.invalidateQueries({ queryKey: ["group", id] });
     },
     onError: (error: Error) => {
@@ -121,15 +164,33 @@ const GroupDetailsPage = () => {
     }
   });
 
+  // Add scope to group mutation
+  const addScopeMutation = useMutation({
+    mutationFn: (scopeId: string) => groupService.addScopeToGroup({
+      scopeId,
+      groupId: id as string
+    }),
+    onSuccess: () => {
+      toast.success("Scope added to group successfully");
+      queryClient.invalidateQueries({ queryKey: ["group_scopes", id] });
+      queryClient.invalidateQueries({ queryKey: ["available_scopes", id] });
+      queryClient.invalidateQueries({ queryKey: ["group", id] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add scope: ${error.message}`);
+    }
+  });
+
   // Remove scope from group mutation
   const removeScopeMutation = useMutation({
     mutationFn: (scopeId: string) => groupService.removeScopeFromGroup({
-      groupId: id as string,
-      scopeId
+      scopeId,
+      groupId: id as string
     }),
     onSuccess: () => {
       toast.success("Scope removed from group");
       queryClient.invalidateQueries({ queryKey: ["group_scopes", id] });
+      queryClient.invalidateQueries({ queryKey: ["available_scopes", id] });
       queryClient.invalidateQueries({ queryKey: ["group", id] });
     },
     onError: (error: Error) => {
@@ -146,8 +207,16 @@ const GroupDetailsPage = () => {
     updateGroupMutation.mutate(formData);
   };
 
+  const handleAddUser = (userId: string) => {
+    addUserMutation.mutate(userId);
+  };
+
   const handleRemoveUser = (userId: string) => {
     removeUserMutation.mutate(userId);
+  };
+
+  const handleAddScope = (scopeId: string) => {
+    addScopeMutation.mutate(scopeId);
   };
 
   const handleRemoveScope = (scopeId: string) => {
@@ -158,7 +227,7 @@ const GroupDetailsPage = () => {
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const user = row.original;
         const userName = `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`;
         return (
@@ -174,7 +243,7 @@ const GroupDetailsPage = () => {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const user = row.original;
         return (
           <Button 
@@ -194,7 +263,7 @@ const GroupDetailsPage = () => {
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const scope = row.original;
         return (
           <Link to={`/scopes/${scope.id}`} className="font-medium text-blue-600 hover:underline">
@@ -210,11 +279,11 @@ const GroupDetailsPage = () => {
     {
       accessorKey: "active",
       header: "Status",
-      cell: ({ row }) => <StatusBadge active={row.original.active} />
+      cell: ({ row }: any) => <StatusBadge active={row.original.active} />
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const scope = row.original;
         return (
           <Button 
@@ -350,17 +419,27 @@ const GroupDetailsPage = () => {
 
           <TabsContent value="users" className="mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Users in this Group</CardTitle>
-                <CardDescription>Manage users associated with this group</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Users in this Group</CardTitle>
+                  <CardDescription>Manage users associated with this group</CardDescription>
+                </div>
+                <Button 
+                  onClick={() => setIsAddUsersDialogOpen(true)}
+                  className="ml-auto"
+                  size="sm"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Users
+                </Button>
               </CardHeader>
               <CardContent>
                 <PaginatedDataTable
                   columns={userColumns}
                   data={usersData?.data || []}
                   isLoading={isLoadingUsers}
-                  pageCount={usersData?.data.totalPages || 1}
-                  totalItems={usersData?.data?.totalItems || 0}
+                  pageCount={usersData?.pages || 1}
+                  totalItems={usersData?.total || 0}
                   currentPage={usersPage}
                   pageSize={pageSize}
                   onPageChange={(page) => setUsersPage(page)}
@@ -373,17 +452,27 @@ const GroupDetailsPage = () => {
 
           <TabsContent value="scopes" className="mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Scopes in this Group</CardTitle>
-                <CardDescription>Manage scopes associated with this group</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Scopes in this Group</CardTitle>
+                  <CardDescription>Manage scopes associated with this group</CardDescription>
+                </div>
+                <Button 
+                  onClick={() => setIsAddScopesDialogOpen(true)}
+                  className="ml-auto"
+                  size="sm"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Scopes
+                </Button>
               </CardHeader>
               <CardContent>
                 <PaginatedDataTable
                   columns={scopeColumns}
                   data={scopesData?.data || []}
                   isLoading={isLoadingScopes}
-                  pageCount={scopesData?.data?.totalPages || 1}
-                  totalItems={scopesData?.data?.totalItems || 0}
+                  pageCount={scopesData?.pages || 1}
+                  totalItems={scopesData?.total || 0}
                   currentPage={scopesPage}
                   pageSize={pageSize}
                   onPageChange={(page) => setScopesPage(page)}
@@ -416,6 +505,42 @@ const GroupDetailsPage = () => {
           onCancel={() => setIsEditDialogOpen(false)}
         />
       )}
+
+      <Dialog open={isAddUsersDialogOpen} onOpenChange={setIsAddUsersDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add Users to Group</DialogTitle>
+          </DialogHeader>
+          <EntitySelector
+            title="Select Users"
+            description="Choose which users to add to this group"
+            availableItems={availableUsersData?.data || []}
+            selectedItems={usersData?.data || []}
+            isLoading={isLoadingAvailableUsers}
+            onSelect={(user) => handleAddUser(user.id)}
+            onRemove={(user) => handleRemoveUser(user.id)}
+            emptyMessage="No more users available to add"
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddScopesDialogOpen} onOpenChange={setIsAddScopesDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add Scopes to Group</DialogTitle>
+          </DialogHeader>
+          <EntitySelector
+            title="Select Scopes"
+            description="Choose which scopes to add to this group"
+            availableItems={availableScopesData?.data || []}
+            selectedItems={scopesData?.data || []}
+            isLoading={isLoadingAvailableScopes}
+            onSelect={(scope) => handleAddScope(scope.id)}
+            onRemove={(scope) => handleRemoveScope(scope.id)}
+            emptyMessage="No more scopes available to add"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

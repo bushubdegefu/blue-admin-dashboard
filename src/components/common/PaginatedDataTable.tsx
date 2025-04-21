@@ -1,7 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { DataTable } from "./DataTable";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 
 interface PaginatedDataTableProps {
   columns: any[];
@@ -147,7 +155,7 @@ export function PaginatedDataTable({
         filterOptions={filterOptions}
         searchPlaceholder={searchPlaceholder}
         pagination={pagination}
-        onPageChange={onPageChange}
+        onPageChange={handlePageChange}
         onPageSizeChange={onPageSizeChange}
         onFilterChange={onFilterChange}
       />
