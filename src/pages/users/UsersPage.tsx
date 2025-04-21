@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, UserPlus } from "lucide-react";
-import { User, TableColumn, FilterOption } from "@/types";
+import { User, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { DataTable } from "@/components/common/DataTable";
+import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -46,11 +47,11 @@ const UsersPage = () => {
   
   const columnHelper = createColumnHelper<User>();
   
-  const columns: TableColumn<User>[] = [
+  const columns = [
     {
       header: "Username",
       accessorKey: "username",
-      cell: (info) => (
+      cell: (info: any) => (
         <div>
           <div className="font-medium">{info.getValue() as string}</div>
           <div className="text-xs text-gray-500">ID: {info.row.original.id}</div>
@@ -60,7 +61,7 @@ const UsersPage = () => {
     {
       header: "Name",
       accessorKey: "first_name",
-      cell: (info) => {
+      cell: (info: any) => {
         const user = info.row.original;
         const fullName = `${user.first_name} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name}`;
         return fullName;
@@ -73,7 +74,7 @@ const UsersPage = () => {
     {
       header: "Status",
       accessorKey: "disabled",
-      cell: (info) => (
+      cell: (info: any) => (
         <StatusBadge 
           active={!(info.getValue() as boolean)} 
           activeText="Active"
@@ -84,11 +85,11 @@ const UsersPage = () => {
     {
       header: "Groups",
       accessorKey: "groups",
-      cell: (info) => {
+      cell: (info: any) => {
         const groups = info.row.original.groups || [];
         return groups.length > 0 ? (
           <div className="space-y-1">
-            {groups.slice(0, 2).map((group) => (
+            {groups.slice(0, 2).map((group: any) => (
               <div key={group.id} className="text-xs px-2 py-1 bg-gray-100 rounded-full inline-block mr-1">
                 {group.name}
               </div>
@@ -108,11 +109,11 @@ const UsersPage = () => {
     {
       header: "Scopes",
       accessorKey: "scopes",
-      cell: (info) => {
+      cell: (info: any) => {
         const scopes = info.row.original.scopes || [];
         return scopes.length > 0 ? (
           <div className="space-y-1">
-            {scopes.slice(0, 2).map((scope) => (
+            {scopes.slice(0, 2).map((scope: any) => (
               <div key={scope.id} className="text-xs px-2 py-1 bg-gray-100 rounded-full inline-block mr-1">
                 {scope.name}
               </div>
@@ -132,12 +133,12 @@ const UsersPage = () => {
     {
       header: "Registered",
       accessorKey: "date_registered",
-      cell: (info) => formatDate(info.getValue() as string, "PP"),
+      cell: (info: any) => formatDate(info.getValue() as string, "PP"),
     },
     {
       header: "Actions",
       accessorKey: "id",
-      cell: (info) => (
+      cell: (info: any) => (
         <ActionMenu
           actions={[
             {
@@ -194,7 +195,7 @@ const UsersPage = () => {
         </Button>
       </PageHeader>
 
-      <DataTable
+      <PaginatedDataTable
         columns={columns}
         data={users}
         filterOptions={filterOptions}
@@ -203,12 +204,10 @@ const UsersPage = () => {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onFilterChange={handleFilterChange}
-        pagination={{
-          pageIndex: page - 1,
-          pageSize,
-          pageCount: usersResponse?.pages || 1,
-          total: usersResponse?.total || 0
-        }}
+        pageCount={usersResponse?.pages || 1}
+        totalItems={usersResponse?.total || 0}
+        currentPage={page}
+        pageSize={pageSize}
       />
     </>
   );

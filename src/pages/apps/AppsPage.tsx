@@ -5,7 +5,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { App as AppType, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { DataTable } from "@/components/common/DataTable";
+import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -193,7 +193,7 @@ const AppsPage = () => {
         </Button>
       </PageHeader>
 
-      <DataTable
+      <PaginatedDataTable
         columns={columns}
         data={apps}
         filterOptions={filterOptions}
@@ -202,12 +202,10 @@ const AppsPage = () => {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onFilterChange={handleFilterChange}
-        pagination={{
-          pageIndex: page - 1,
-          pageSize,
-          pageCount: appsResponse?.pages || 1,
-          total: appsResponse?.total || 0
-        }}
+        pageCount={appsResponse?.pages || 1}
+        totalItems={appsResponse?.total || 0}
+        currentPage={page}
+        pageSize={pageSize}
       />
 
       <ConfirmDialog

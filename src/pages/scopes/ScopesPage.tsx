@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
-import { Scope, TableColumn, FilterOption } from "@/types";
+import { Scope, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { DataTable } from "@/components/common/DataTable";
+import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -69,11 +70,11 @@ const ScopesPage = () => {
 
   const columnHelper = createColumnHelper<Scope>();
   
-  const columns: TableColumn<Scope>[] = [
+  const columns = [
     {
       header: "Name",
       accessorKey: "name",
-      cell: (info) => (
+      cell: (info: any) => (
         <div>
           <div className="font-medium">{info.getValue() as string}</div>
           <div className="text-xs text-gray-500">ID: {info.row.original.id}</div>
@@ -83,7 +84,7 @@ const ScopesPage = () => {
     {
       header: "Description",
       accessorKey: "description",
-      cell: (info) => (
+      cell: (info: any) => (
         <div className="max-w-xs truncate">
           {info.getValue() as string || <span className="text-gray-400 text-xs">No description</span>}
         </div>
@@ -92,14 +93,14 @@ const ScopesPage = () => {
     {
       header: "Status",
       accessorKey: "active",
-      cell: (info) => (
+      cell: (info: any) => (
         <StatusBadge active={info.getValue() as boolean} />
       ),
     },
     {
       header: "Resources",
       accessorKey: "resources",
-      cell: (info) => {
+      cell: (info: any) => {
         const resources = info.row.original.resources || [];
         const count = resources.length;
         return (
@@ -110,7 +111,7 @@ const ScopesPage = () => {
     {
       header: "Users",
       accessorKey: "users",
-      cell: (info) => {
+      cell: (info: any) => {
         const users = info.row.original.users || [];
         const count = users.length;
         return (
@@ -121,7 +122,7 @@ const ScopesPage = () => {
     {
       header: "Groups",
       accessorKey: "groups",
-      cell: (info) => {
+      cell: (info: any) => {
         const groups = info.row.original.groups || [];
         const count = groups.length;
         return (
@@ -132,7 +133,7 @@ const ScopesPage = () => {
     {
       header: "Actions",
       accessorKey: "id",
-      cell: (info) => (
+      cell: (info: any) => (
         <ActionMenu
           actions={[
             {
@@ -199,7 +200,7 @@ const ScopesPage = () => {
         </Button>
       </PageHeader>
 
-      <DataTable
+      <PaginatedDataTable
         columns={columns}
         data={scopes}
         filterOptions={filterOptions}
@@ -208,12 +209,10 @@ const ScopesPage = () => {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onFilterChange={handleFilterChange}
-        pagination={{
-          pageIndex: page - 1,
-          pageSize,
-          pageCount: scopesResponse?.pages || 1,
-          total: scopesResponse?.total || 0
-        }}
+        pageCount={scopesResponse?.pages || 1}
+        totalItems={scopesResponse?.total || 0}
+        currentPage={page}
+        pageSize={pageSize}
       />
 
       <ConfirmDialog

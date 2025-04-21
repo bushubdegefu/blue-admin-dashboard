@@ -17,10 +17,6 @@ import {
   ChevronUp, 
   Search, 
   X,
-  ChevronsLeft,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsRight,
   Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -87,7 +83,7 @@ export function DataTable<TData, TValue>({
       }
       onFilterChange(newFilters);
     }
-  }, [debouncedSearchTerm, onFilterChange]);
+  }, [debouncedSearchTerm, activeFilters, onFilterChange]);
 
   // Update local pagination when external pagination changes
   useEffect(() => {

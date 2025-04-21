@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
+import Sidebar from "./Sidebar";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { UserProfileMenu } from "./UserProfileMenu";
