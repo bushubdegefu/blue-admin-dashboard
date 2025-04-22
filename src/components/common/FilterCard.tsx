@@ -11,7 +11,6 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FilterOption } from "@/types";
 
 interface FilterCardProps {
   title?: string;
@@ -40,11 +39,11 @@ export function FilterCard({
   };
 
   return (
-    <Card className="mb-4 border-admin-100 shadow-sm">
+    <Card className="mb-4 border-gray-200 shadow-sm bg-white">
       <Collapsible open={open} onOpenChange={handleToggle}>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0 bg-gray-50/50">
           <div>
-            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-800">{title}</CardTitle>
             <CardDescription className="text-sm text-gray-500">
               {description}
             </CardDescription>
@@ -53,7 +52,7 @@ export function FilterCard({
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 rounded-full hover:bg-admin-100"
+              className="h-8 w-8 rounded-full hover:bg-gray-100"
             >
               {open ? <X size={18} /> : <Filter size={18} />}
             </Button>
@@ -61,7 +60,7 @@ export function FilterCard({
         </CardHeader>
         
         <CollapsibleContent>
-          <CardContent className="py-2">
+          <CardContent className="py-4 space-y-4">
             {children}
           </CardContent>
           
@@ -73,6 +72,7 @@ export function FilterCard({
                   variant="outline" 
                   size="sm"
                   onClick={onReset}
+                  className="text-gray-600 hover:text-gray-800"
                 >
                   Reset
                 </Button>
@@ -81,7 +81,7 @@ export function FilterCard({
                 <Button 
                   type="button"
                   size="sm"
-                  className="bg-admin-600 hover:bg-admin-700"
+                  className="bg-primary hover:bg-primary/90"
                   onClick={onApply}
                 >
                   Apply Filters

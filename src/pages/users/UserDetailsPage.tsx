@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, UserCog } from "lucide-react";
@@ -19,7 +18,6 @@ const UserDetailsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
 
-  // Get user data with React Query
   const { 
     data: userResponse,
     isLoading,
@@ -30,20 +28,16 @@ const UserDetailsPage = () => {
     queryFn: () => userService.getUserById(id || ""),
     enabled: !!id,
     meta: {
-      onSettled: (data, error) => {
-        if (error) {
-          toast.error(`Error loading user: ${(error as any).message}`);
-          navigate("/users");
-        }
+      onError: (err: any) => {
+        toast.error(`Error loading user: ${err.message}`);
+        navigate("/users");
       }
     }
   });
 
   const user = userResponse?.data;
 
-
-   // Fetch complementary permissions and groups data
-   const { data: groupItemsAvailable } = useQuery({
+  const { data: groupItemsAvailable } = useQuery({
     queryKey: ["user_comp_groups", id],
     queryFn: () => userService.getAvailableGroupsForUser(id),
   });
@@ -51,14 +45,11 @@ const UserDetailsPage = () => {
   const { data: groupItemsAttached } = useQuery({
     queryKey: ["user_groups", id],
     queryFn: () => userService.getAttachedGroupsForUser(id),
-
   });
-  
 
-const { data: scopeItemsAvailable } = useQuery({
+  const { data: scopeItemsAvailable } = useQuery({
     queryKey: ["user_comp_scopes", id],
     queryFn: () => userService.getAvailableScopesForUser(id),
-    
   });
 
   const { data: scopeItemsAttached } = useQuery({
@@ -66,7 +57,6 @@ const { data: scopeItemsAvailable } = useQuery({
     queryFn: () => userService.getAttachedScopesForUser(id),
   });
 
-  // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: (userData: any) => userService.updateUser(userData),
     onSuccess: () => {
@@ -87,7 +77,6 @@ const { data: scopeItemsAvailable } = useQuery({
     updateUserMutation.mutate({userId: id, userData: JSON.parse(JSON.stringify(formData))});
   };
 
-  // Mutations for adding and removing groups
   const addGroupMutation = useMutation({
     mutationFn: (groupId: string) => userService.addGroupUser({
       userId: id || "",
@@ -98,7 +87,6 @@ const { data: scopeItemsAvailable } = useQuery({
       queryClient.invalidateQueries({ queryKey: ['user', id] });
       queryClient.invalidateQueries({ queryKey: ['user_comp_groups', id] });
       queryClient.invalidateQueries({ queryKey: ['user_groups', id] });
-
     },
     onError: (err: any) => {
       toast.error(`Failed to add group: ${err.message}`);
@@ -121,7 +109,6 @@ const { data: scopeItemsAvailable } = useQuery({
     }
   });
 
-  // Mutations for adding and removing scopes
   const addScopeMutation = useMutation({
     mutationFn: (scopeId: string) => userService.addScopeUser({
       userId: id || "",
@@ -154,22 +141,18 @@ const { data: scopeItemsAvailable } = useQuery({
     }
   });
 
-  // Handle adding groups
   const handleAddGroup = (groupId: string) => {
     addGroupMutation.mutate(groupId);
   };
 
-  // Handle removing groups
   const handleRemoveGroup = (groupId: string) => {
     removeGroupMutation.mutate(groupId);
   };
 
-  // Handle adding scopes
   const handleAddScope = (scopeId: string) => {
     addScopeMutation.mutate(scopeId);
   };
 
-  // Handle removing scopes
   const handleRemoveScope = (scopeId: string) => {
     removeScopeMutation.mutate(scopeId);
   };
@@ -177,7 +160,7 @@ const { data: scopeItemsAvailable } = useQuery({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-admin-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -186,10 +169,6 @@ const { data: scopeItemsAvailable } = useQuery({
     return null;
   }
 
-
-
-  
-// ######################
   return (
     <>
       <PageHeader title="User Details">
@@ -213,7 +192,7 @@ const { data: scopeItemsAvailable } = useQuery({
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="details">
-                <TabsList className="mb-4 bg-secondary">
+                <TabsList className="mb-4">
                   <TabsTrigger value="details">User Details</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
                 </TabsList>
@@ -239,7 +218,7 @@ const { data: scopeItemsAvailable } = useQuery({
                     <div className="p-4 border rounded-md bg-gray-50">
                       <div className="text-sm font-medium">Registration Date</div>
                       <div className="mt-1">
-                        {formatDate(user.date_registered, "PPpp")}
+                        {formatDate(user.date_registered)}
                       </div>
                     </div>
                   </div>

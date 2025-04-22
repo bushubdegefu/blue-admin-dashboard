@@ -8,17 +8,13 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useState, useEffect } from "react";
-import { useQueryClient } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface GenericPaginationProps {
     totalItems: number;
     pageSize: number;
     currentPage: number;
-    queryKey: string;
     onPageChange: (page: number) => void;
     onPageSizeChange: (pageSize: number) => void;
 }
@@ -27,39 +23,26 @@ function GenericPagination({
     totalItems, 
     pageSize, 
     currentPage, 
-    queryKey, 
     onPageChange, 
     onPageSizeChange 
 }: GenericPaginationProps) {
-    const queryClient = useQueryClient();
     const totalPages = Math.ceil(totalItems / pageSize) || 1;
     
-    // Ensure currentPage is within valid range
-    useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
-            onPageChange(1);
-        }
-    }, [totalPages, currentPage, onPageChange]);
-
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
-            onPageChange(newPage); 
-            queryClient.invalidateQueries({ queryKey: [queryKey, newPage, pageSize] });
+            onPageChange(newPage);
         }
     };
     
-    const handlePageSizeChange = (newPageSize: number) => {
-        onPageChange(1); // Reset to the first page when page size changes
-        onPageSizeChange(newPageSize);
-        queryClient.invalidateQueries({ queryKey: [queryKey, 1, newPageSize] });
+    const handlePageSizeChange = (newPageSize: string) => {
+        onPageChange(1);
+        onPageSizeChange(Number(newPageSize));
     };
 
-    // Generate pagination items
     const renderPaginationItems = () => {
         const items = [];
         const maxVisiblePages = 5;
         
-        // Always show first page
         if (currentPage > 3) {
             items.push(
                 <PaginationItem key="first">
@@ -67,7 +50,6 @@ function GenericPagination({
                 </PaginationItem>
             );
             
-            // Show ellipsis if needed
             if (currentPage > 4) {
                 items.push(
                     <PaginationItem key="ellipsis-start">
@@ -77,11 +59,9 @@ function GenericPagination({
             }
         }
         
-        // Calculate range of pages to show
         const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
         const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
         
-        // Generate page numbers
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <PaginationItem key={i}>
@@ -95,7 +75,6 @@ function GenericPagination({
             );
         }
         
-        // Show ellipsis and last page if needed
         if (endPage < totalPages - 1) {
             items.push(
                 <PaginationItem key="ellipsis-end">
@@ -117,18 +96,17 @@ function GenericPagination({
         return items;
     };
 
-    // Page size options
     const pageSizeOptions = [5, 10, 20, 30, 50, 100];
 
     return (
-        <Card className="mt-4 border-admin-100 shadow-sm">
+        <Card className="mt-4 border-gray-200 shadow-sm bg-white">
             <CardContent className="pt-4">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                         <span>Showing</span>
                         <Select
                             value={pageSize.toString()}
-                            onValueChange={(value) => handlePageSizeChange(Number(value))}
+                            onValueChange={handlePageSizeChange}
                         >
                             <SelectTrigger className="w-[70px] h-8">
                                 <SelectValue placeholder={pageSize} />
