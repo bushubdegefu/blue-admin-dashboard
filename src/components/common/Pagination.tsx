@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface GenericPaginationProps {
     totalItems: number;
     pageSize: number;
+    queryKey: string;
     currentPage: number;
     onPageChange: (page: number) => void;
     onPageSizeChange: (pageSize: number) => void;
@@ -22,21 +24,24 @@ interface GenericPaginationProps {
 function GenericPagination({ 
     totalItems, 
     pageSize, 
+    queryKey,
     currentPage, 
     onPageChange, 
     onPageSizeChange 
 }: GenericPaginationProps) {
+    const queryClient = useQueryClient();
     const totalPages = Math.ceil(totalItems / pageSize) || 1;
-    
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             onPageChange(newPage);
+            queryClient.invalidateQueries({ queryKey: [queryKey, newPage, currentPage] });
         }
     };
     
     const handlePageSizeChange = (newPageSize: string) => {
         onPageChange(1);
         onPageSizeChange(Number(newPageSize));
+        queryClient.invalidateQueries({ queryKey: [queryKey, 1, currentPage] });
     };
 
     const renderPaginationItems = () => {
@@ -96,7 +101,7 @@ function GenericPagination({
         return items;
     };
 
-    const pageSizeOptions = [5, 10, 20, 30, 50, 100];
+    const pageSizeOptions = [1,5, 10, 20, 30, 50, 100];
 
     return (
         <Card className="mt-4 border-gray-200 shadow-sm bg-white">
@@ -119,7 +124,7 @@ function GenericPagination({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <span>of {totalItems} items</span>
+                        <span>items</span>
                     </div>
 
                     <Pagination>

@@ -13,18 +13,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { userService } from "@/api/userService";
 import { toast } from "sonner";
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { FilterCard } from "@/components/common/FilterCard";
 import GenericPagination from "@/components/common/Pagination";
-import { useDebounce } from "@/hooks/use-debounce";
+import GenericFilterCard from "@/components/common/GenricFilterCard";
+
 
 const UsersPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
-  const queryClient = useQueryClient();
-
+ 
   const [filters, setFilters] = useState({
     username: '',
     email: '',
@@ -50,6 +46,8 @@ const UsersPage = () => {
       first_name: '',
       last_name: '',
     });
+
+
     setFilters({
       username: '',
       email: '',
@@ -85,8 +83,6 @@ const UsersPage = () => {
   }
 
   const users = usersResponse?.data || [];
-  
-  const columnHelper = createColumnHelper<User>();
   
   const columns = [
     {
@@ -210,92 +206,6 @@ const UsersPage = () => {
     },
   ];
 
-  const handlePageChange = (page: number) => {
-    setPage(page);
-  };
-
-  const handlePageSizeChange = (pageSize: number) => {
-    setPageSize(pageSize);
-  };
-
-  const handleFilterChange = (filters: any) => {
-    setFilters(filters);
-  };
-
-  const applyFilters = (data: any) => {
-    setFilters(data);
-    queryClient.invalidateQueries({ queryKey: ['users'] });
-    setPage(1); // Reset to first page when applying new filters
-  };
-
-  const FilterCardComponent = () => (
-    <FilterCard 
-      title="User Filters"
-      description="Filter users by any combination of fields"
-      isOpen={isFiltersVisible}
-      onToggle={setIsFiltersVisible}
-      onApply={() => filterForm.handleSubmit(applyFilters)()}
-      onReset={clearFilters}
-    >
-      <Form {...filterForm}>
-        <form onSubmit={filterForm.handleSubmit(applyFilters)} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <FormField
-              control={filterForm.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Filter by username" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={filterForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Filter by email" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={filterForm.control}
-              name="first_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Filter by first name" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={filterForm.control}
-              name="last_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Filter by last name" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </form>
-      </Form>
-    </FilterCard>
-  );
 
   return (
     <>
@@ -310,11 +220,18 @@ const UsersPage = () => {
           </Link>
         </Button>
       </PageHeader>
-      
+      <GenericFilterCard 
+        columns={filterOptions}
+        queryKey="users"
+        setFilters={setFilters}
+        filterForm={filterForm}
+        clearFilters={clearFilters}
+        setPage={setPage}
+      />
       <DataTable
         columns={columns}
         data={users}
-        filterCard={FilterCardComponent}
+        // filterCard={FilterCardComponent}
         isLoading={isLoading}
         filterOptions={filterOptions}
         searchPlaceholder="Search users..."

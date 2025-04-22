@@ -53,7 +53,7 @@ export const scopeService = {
 //###############################################
 // Now realationshipQeury Endpoints(one to Many)
 //###############################################
-getScopeResource: (data)=>{
+	getScopeResource: (data)=>{
 		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 

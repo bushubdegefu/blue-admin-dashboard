@@ -33,7 +33,6 @@ import { useDebounce } from "@/hooks/use-debounce";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filterCard?: () => JSX.Element;
   filterOptions?: FilterOption[];
   searchPlaceholder?: string;
   isLoading?: boolean;
@@ -46,7 +45,6 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  filterCard,
   filterOptions = [],
   searchPlaceholder = "Search...",
   isLoading = false,
@@ -251,8 +249,7 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       
-      {filterCard && filterCard()}
-
+  
       <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
         {isLoading ? (
           <div className="w-full h-48 flex items-center justify-center">

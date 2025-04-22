@@ -71,66 +71,9 @@ const ScopeDetailsPage = () => {
 
   // Mutations for adding and removing apps, users and resources
   const queryClientContext = useQueryClient();
-
-  const addAppMutation = useMutation(
-    (appId: string) => scopeService.addScopeApp({ scopeId: scopeId || "", appId }),
-    {
-      onSuccess: () => {
-        queryClientContext.invalidateQueries({ queryKey: ["attached-apps", scopeId] });
-        queryClientContext.invalidateQueries({ queryKey: ["available-apps", scopeId] });
-        toast.success("App added to scope");
-      },
-      onError: (error: any) => {
-        toast.error(`Failed to add app: ${error.message}`);
-      },
-    }
-  );
-
-  const removeAppMutation = useMutation(
-    (appId: string) => scopeService.deleteScopeApp({ scopeId: scopeId || "", appId }),
-    {
-      onSuccess: () => {
-        queryClientContext.invalidateQueries({ queryKey: ["attached-apps", scopeId] });
-        queryClientContext.invalidateQueries({ queryKey: ["available-apps", scopeId] });
-        toast.success("App removed from scope");
-      },
-      onError: (error: any) => {
-        toast.error(`Failed to remove app: ${error.message}`);
-      },
-    }
-  );
-
-  const addUserMutation = useMutation(
-    (userId: string) => scopeService.addScopeUser({ scopeId: scopeId || "", userId }),
-    {
-      onSuccess: () => {
-        queryClientContext.invalidateQueries({ queryKey: ["scope-users", scopeId] });
-        queryClientContext.invalidateQueries({ queryKey: ["available-users", scopeId] });
-        toast.success("User added to scope");
-      },
-      onError: (error: any) => {
-        toast.error(`Failed to add user: ${error.message}`);
-      },
-    }
-  );
-
-  const removeUserMutation = useMutation(
-    (userId: string) => scopeService.deleteScopeUser({ scopeId: scopeId || "", userId }),
-    {
-      onSuccess: () => {
-        queryClientContext.invalidateQueries({ queryKey: ["scope-users", scopeId] });
-        queryClientContext.invalidateQueries({ queryKey: ["available-users", scopeId] });
-        toast.success("User removed from scope");
-      },
-      onError: (error: any) => {
-        toast.error(`Failed to remove user: ${error.message}`);
-      },
-    }
-  );
-
   const addResourceMutation = useMutation(
-    (resourceId: string) => scopeService.addScopeResource({ scopeId: scopeId || "", resourceId }),
     {
+      mutationFn: (resourceId: string) => scopeService.addResourceScope({ scopeId: scopeId || "", resourceId }),
       onSuccess: () => {
         queryClientContext.invalidateQueries({ queryKey: ["scope-resources", scopeId] });
         queryClientContext.invalidateQueries({ queryKey: ["available-resources", scopeId] });
@@ -143,8 +86,8 @@ const ScopeDetailsPage = () => {
   );
 
   const removeResourceMutation = useMutation(
-    (resourceId: string) => scopeService.deleteScopeResource({ scopeId: scopeId || "", resourceId }),
     {
+      mutationFn: (resourceId: string) => scopeService.deleteResourceScope({ scopeId: scopeId || "", resourceId }),
       onSuccess: () => {
         queryClientContext.invalidateQueries({ queryKey: ["scope-resources", scopeId] });
         queryClientContext.invalidateQueries({ queryKey: ["available-resources", scopeId] });
@@ -156,22 +99,6 @@ const ScopeDetailsPage = () => {
     }
   );
 
-  // Handlers for adding and removing apps, users and resources
-  const handleAddApp = async (appId: string) => {
-    await addAppMutation.mutateAsync(appId);
-  };
-
-  const handleRemoveApp = async (appId: string) => {
-    await removeAppMutation.mutateAsync(appId);
-  };
-
-  const handleAddUser = async (userId: string) => {
-    await addUserMutation.mutateAsync(userId);
-  };
-
-  const handleRemoveUser = async (userId: string) => {
-    await removeUserMutation.mutateAsync(userId);
-  };
 
   const handleAddResource = async (resourceId: string) => {
     await addResourceMutation.mutateAsync(resourceId);
@@ -216,8 +143,9 @@ const ScopeDetailsPage = () => {
   return (
     <>
       <PageHeader
-        title={
-          isEditingName ? (
+        title="Scope Details"  description={scope.description || "No description provided"}
+      >
+        {/* {isEditingName ? (
             <div className="flex items-center">
               <input
                 type="text"
@@ -248,9 +176,7 @@ const ScopeDetailsPage = () => {
               </Button>
             </div>
           )
-        }
-        description={scope.description || "No description provided"}
-      >
+        } */}
         <Button asChild>
           <Link to="/scopes">
             Back to Scopes
@@ -290,8 +216,8 @@ const ScopeDetailsPage = () => {
           attachedItems={scopeUsers || []}
           entityType="User"
           emptyMessage="No users assigned to this scope."
-          onAddItems={handleAddUser}
-          onRemoveItem={handleRemoveUser}
+          onAddItems={null}
+          onRemoveItem={null}
           canManage={true}
         />
 
@@ -306,16 +232,6 @@ const ScopeDetailsPage = () => {
           canManage={true}
         />
 
-        <RelatedItemsCard
-          title={`Apps (${attachedApps?.length || 0})`}
-          availableItems={availableApps || []}
-          attachedItems={attachedApps || []}
-          entityType="App"
-          emptyMessage="No apps assigned to this scope."
-          onAddItems={handleAddApp}
-          onRemoveItem={handleRemoveApp}
-          canManage={true}
-        />
       </div>
     </>
   );

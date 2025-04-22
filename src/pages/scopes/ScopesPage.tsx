@@ -5,7 +5,6 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { Scope, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -13,11 +12,19 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scopeService } from "@/api/scopeService";
+import { DataTable } from "@/components/common/DataTable";
+import GenericPagination from "@/components/common/Pagination";
+import { useForm } from "react-hook-form";
+import GenericFilterCard from "@/components/common/GenricFilterCard";
 
 const ScopesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+      name: '',
+      description: '',
+      active: '',
+  });
   const [scopeToDelete, setScopeToDelete] = useState<Scope | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -68,7 +75,6 @@ const ScopesPage = () => {
     deleteScopeMutation.mutate(scopeToDelete.id);
   };
 
-  const columnHelper = createColumnHelper<Scope>();
   
   const columns = [
     {
@@ -174,18 +180,34 @@ const ScopesPage = () => {
     },
   ];
 
-  const handlePageChange = (page: number) => {
-    setPage(page);
+  
+   // Create form for filters
+   const filterForm = useForm({
+    defaultValues: {
+      name: '',
+      description: '',
+      active: '',
+    }
+  });
+
+   // Clear all filters
+   const clearFilters = () => {
+    filterForm.reset({
+      name: '',
+      description: '',
+      active: '',
+    });
+
+
+    setFilters({
+      name: '',
+      description: '',
+      active: '',
+    });
+    setPage(1);
   };
 
-  const handlePageSizeChange = (pageSize: number) => {
-    setPageSize(pageSize);
-  };
-
-  const handleFilterChange = (filters: any) => {
-    setFilters(filters);
-  };
-
+ 
   return (
     <>
       <PageHeader
@@ -199,22 +221,31 @@ const ScopesPage = () => {
           </Link>
         </Button>
       </PageHeader>
+      <GenericFilterCard 
+        columns={filterOptions}
+        queryKey="scopes"
+        setFilters={setFilters}
+        filterForm={filterForm}
+        clearFilters={clearFilters}
+        setPage={setPage}
+      />
 
-      <PaginatedDataTable
+      <DataTable
         columns={columns}
         data={scopes}
         filterOptions={filterOptions}
         searchPlaceholder="Search scopes..."
         isLoading={isLoading}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onFilterChange={handleFilterChange}
-        pageCount={scopesResponse?.pages || 1}
-        totalItems={scopesResponse?.total || 0}
-        currentPage={page}
-        pageSize={pageSize}
+       
       />
-
+      <GenericPagination 
+        totalItems={scopesResponse?.total || 0}
+        pageSize={pageSize}
+        currentPage={page}
+        queryKey="scopes"
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
       <ConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}

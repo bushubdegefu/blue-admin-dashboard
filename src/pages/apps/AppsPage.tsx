@@ -5,7 +5,6 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Trash2, Plus } from "lucide-react";
 import { App as AppType, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -13,11 +12,19 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { appService } from "@/api/appService";
+import { DataTable } from "@/components/common/DataTable";
+import GenericPagination from "@/components/common/Pagination";
+import { useForm } from "react-hook-form";
+import GenericFilterCard from "@/components/common/GenricFilterCard";
 
 const AppsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+      name: '',
+      description: '',
+      active: '',
+  });
   const [appToDelete, setAppToDelete] = useState<AppType | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -68,9 +75,7 @@ const AppsPage = () => {
     deleteAppMutation.mutate(appToDelete.id);
   };
 
-  const columnHelper = createColumnHelper<AppType>();
-  
-  const columns = [
+   const columns = [
     {
       id: "name",
       header: "Name",
@@ -167,17 +172,34 @@ const AppsPage = () => {
     },
   ];
 
-  const handlePageChange = (page: number) => {
-    setPage(page);
-  };
+    // Create form for filters
+     const filterForm = useForm({
+      defaultValues: {
+        name: '',
+        description: '',
+        active: '',
+      }
+    });
+  
+     // Clear all filters
+     const clearFilters = () => {
+      filterForm.reset({
+        name: '',
+        description: '',
+        active: '',
+      });
+  
+  
+      setFilters({
+        name: '',
+        description: '',
+        active: '',
+      });
+      setPage(1);
+    };
+  
 
-  const handlePageSizeChange = (pageSize: number) => {
-    setPageSize(pageSize);
-  };
-
-  const handleFilterChange = (filters: any) => {
-    setFilters(filters);
-  };
+ 
 
   return (
     <>
@@ -192,20 +214,28 @@ const AppsPage = () => {
           </Link>
         </Button>
       </PageHeader>
-
-      <PaginatedDataTable
+      <GenericFilterCard 
+        columns={filterOptions}
+        queryKey="apps"
+        setFilters={setFilters}
+        filterForm={filterForm}
+        clearFilters={clearFilters}
+        setPage={setPage}
+      />
+      <DataTable
         columns={columns}
         data={apps}
         filterOptions={filterOptions}
-        searchPlaceholder="Search applications..."
         isLoading={isLoading}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onFilterChange={handleFilterChange}
-        pageCount={appsResponse?.pages || 1}
+        searchPlaceholder="Search applications..."
+        />
+       <GenericPagination 
         totalItems={appsResponse?.total || 0}
-        currentPage={page}
         pageSize={pageSize}
+        currentPage={page}
+        queryKey="apps"
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
       />
 
       <ConfirmDialog

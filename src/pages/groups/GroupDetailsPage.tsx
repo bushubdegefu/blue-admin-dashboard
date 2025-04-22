@@ -17,15 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
-import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { GroupForm } from "@/components/forms/GroupForm";
-import { EntitySelector } from "@/components/common/EntitySelector";
+import { EntitySelector, EntitySelectorUser } from "@/components/common/EntitySelector";
 import { groupService } from "@/api/groupService";
 import { Group, TableColumn } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DataTable } from "@/components/common/DataTable";
+import GenericPagination from "@/components/common/Pagination";
 
 const GroupDetailsPage = () => {
   const { id } = useParams();
@@ -64,7 +65,7 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingUsers
   } = useQuery({
     queryKey: ["group_users", id, usersPage, pageSize],
-    queryFn: () => groupService.getGroupUsers({ groupId: id, page: usersPage, size: pageSize }),
+    queryFn: () => groupService.getGroupUser({ groupId: id, page: usersPage, size: pageSize }),
     enabled: !!id && activeTab === "users"
   });
 
@@ -74,7 +75,7 @@ const GroupDetailsPage = () => {
     isLoading: isLoadingScopes
   } = useQuery({
     queryKey: ["group_scopes", id, scopesPage, pageSize],
-    queryFn: () => groupService.getGroupScopes({ groupId: id, page: scopesPage, size: pageSize }),
+    queryFn: () => groupService.getGroupScope({ groupId: id, page: scopesPage, size: pageSize }),
     enabled: !!id && activeTab === "scopes"
   });
 
@@ -132,7 +133,7 @@ const GroupDetailsPage = () => {
 
   // Add user to group mutation
   const addUserMutation = useMutation({
-    mutationFn: (userId: string) => groupService.addUserToGroup({
+    mutationFn: (userId: string) => groupService.addUserGroup({
       userId,
       groupId: id as string
     }),
@@ -149,7 +150,7 @@ const GroupDetailsPage = () => {
 
   // Remove user from group mutation
   const removeUserMutation = useMutation({
-    mutationFn: (userId: string) => groupService.deleteUserFromGroup({
+    mutationFn: (userId: string) => groupService.deleteUserGroup({
       userId,
       groupId: id as string
     }),
@@ -166,7 +167,7 @@ const GroupDetailsPage = () => {
 
   // Add scope to group mutation
   const addScopeMutation = useMutation({
-    mutationFn: (scopeId: string) => groupService.addScopeToGroup({
+    mutationFn: (scopeId: string) => groupService.addScopeGroup({
       scopeId,
       groupId: id as string
     }),
@@ -183,7 +184,7 @@ const GroupDetailsPage = () => {
 
   // Remove scope from group mutation
   const removeScopeMutation = useMutation({
-    mutationFn: (scopeId: string) => groupService.removeScopeFromGroup({
+    mutationFn: (scopeId: string) => groupService.deleteScopeGroup({
       scopeId,
       groupId: id as string
     }),
@@ -348,10 +349,10 @@ const GroupDetailsPage = () => {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">
-              Users ({group.users?.length || 0})
+              Users ({usersData?.data ?.length || 0})
             </TabsTrigger>
             <TabsTrigger value="scopes">
-              Scopes ({group.scopes?.length || 0})
+              Scopes ({scopesData?.data?.length  || 0})
             </TabsTrigger>
           </TabsList>
 
@@ -434,17 +435,19 @@ const GroupDetailsPage = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                <PaginatedDataTable
+                <DataTable
                   columns={userColumns}
                   data={usersData?.data || []}
                   isLoading={isLoadingUsers}
-                  pageCount={usersData?.pages || 1}
-                  totalItems={usersData?.total || 0}
-                  currentPage={usersPage}
-                  pageSize={pageSize}
-                  onPageChange={(page) => setUsersPage(page)}
-                  onPageSizeChange={(size) => setPageSize(size)}
                   searchPlaceholder="Search users..."
+                 />
+                <GenericPagination 
+                  totalItems={usersData?.total || 0}
+                  pageSize={pageSize}
+                  currentPage={usersPage}
+                  queryKey="group_users"
+                  onPageChange={setUsersPage}
+                  onPageSizeChange={setPageSize}
                 />
               </CardContent>
             </Card>
@@ -467,17 +470,19 @@ const GroupDetailsPage = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                <PaginatedDataTable
+                <DataTable
                   columns={scopeColumns}
                   data={scopesData?.data || []}
                   isLoading={isLoadingScopes}
-                  pageCount={scopesData?.pages || 1}
-                  totalItems={scopesData?.total || 0}
-                  currentPage={scopesPage}
-                  pageSize={pageSize}
-                  onPageChange={(page) => setScopesPage(page)}
-                  onPageSizeChange={(size) => setPageSize(size)}
                   searchPlaceholder="Search scopes..."
+                />
+                <GenericPagination 
+                  totalItems={scopesData?.total || 0}
+                  pageSize={pageSize}
+                  currentPage={scopesPage}
+                  queryKey="group_scopes"
+                  onPageChange={setScopesPage}
+                  onPageSizeChange={setPageSize}
                 />
               </CardContent>
             </Card>
@@ -500,9 +505,9 @@ const GroupDetailsPage = () => {
       {isEditDialogOpen && (
         <GroupForm
           group={group}
+          apps={[]} // Pass an empty array or the appropriate apps data
           onSave={handleUpdateGroup}
-          isLoading={updateGroupMutation.isPending}
-          onCancel={() => setIsEditDialogOpen(false)}
+          isLoading={updateGroupMutation.isPending}     
         />
       )}
 
@@ -511,7 +516,7 @@ const GroupDetailsPage = () => {
           <DialogHeader>
             <DialogTitle>Add Users to Group</DialogTitle>
           </DialogHeader>
-          <EntitySelector
+          <EntitySelectorUser
             title="Select Users"
             description="Choose which users to add to this group"
             availableItems={availableUsersData?.data || []}

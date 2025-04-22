@@ -12,16 +12,23 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { resourceService } from "@/api/resourceService";
+import { useForm } from "react-hook-form";
+import GenericFilterCard from "@/components/common/GenricFilterCard";
 
 const ResourcesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({
+    name: '',
+    route_path: '',
+    method: '',
+  });
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+    
   // Get resources with React Query
   const { 
     data: resourcesResponse, 
@@ -67,8 +74,6 @@ const ResourcesPage = () => {
     deleteResourceMutation.mutate(resourceToDelete.id);
   };
 
-  const columnHelper = createColumnHelper<Resource>();
-  
   const columns = [
     {
       header: "Name",
@@ -190,6 +195,34 @@ const ResourcesPage = () => {
     },
   ];
 
+   // Create form for filters
+   const filterForm = useForm({
+    defaultValues: {
+      name: '',
+      route_path: '',
+      method: '',
+      }
+  });
+
+   // Clear all filters
+   const clearFilters = () => {
+    filterForm.reset({
+      name: '',
+      route_path: '',
+      method: '',
+    });
+
+
+    setFilters({
+      name: '',
+      route_path: '',
+      method: '',
+    });
+    setPage(1);
+  };
+
+
+
   const handlePageChange = (page: number) => {
     setPage(page);
   };
@@ -215,6 +248,14 @@ const ResourcesPage = () => {
           </Link>
         </Button>
       </PageHeader>
+      <GenericFilterCard 
+        columns={filterOptions}
+        queryKey="resources"
+        setFilters={setFilters}
+        filterForm={filterForm}
+        clearFilters={clearFilters}
+        setPage={setPage}
+      />
 
       <DataTable
         columns={columns}
