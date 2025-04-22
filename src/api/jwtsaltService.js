@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const jwtsaltService = {
   // Get a paginated list of jwtsalts
-  getJWTSalts: (data) => {
-    return api.get("/blue_admin/jwtsalt", { page: data?.page, size: data?.size });
+  getJWTSalts: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/jwtsalt", params);
   },
 
   // Get a specific jwtsalt by ID

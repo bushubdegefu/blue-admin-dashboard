@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const scopeService = {
   // Get a paginated list of scopes
-  getScopes: (data) => {
-    return api.get("/blue_admin/scope", { page: data?.page, size: data?.size });
+  getScopes: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/scope", params);
   },
 
   // Get a specific scope by ID
@@ -27,17 +28,17 @@ export const scopeService = {
     return api.delete(`/blue_admin/scope/${scopeId}`);
   },
 //###############################################
-// Group-Scope relationship endpoints (Many to Many)
+// Now realationshipQeury Endpoints(Many to Many)
 //###############################################
-	getScopeGroup: (data) => {
-		return api.get(`/blue_admin/groupscope/${data?.scopeId}`, { page: data?.page, size: data?.size });
+	getScopeGroup: (data)=>{
+		return api.get(`/blue_admin/groupscope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 
-	// Get groups that can be assigned to a scope
+	// Get groups that can be assigned to a group
 	getAvailableGroupsForScope: (scopeId) => {
 	    return api.get(`/blue_admin/groupcomplementscope/${scopeId}`);
 	},
-	// Get groups already assigned to a scope
+	// Get permissions that can be assigned to a group
 	getAttachedGroupsForScope: (scopeId) => {
 	    return api.get(`/blue_admin/groupnoncomplementscope/${scopeId}`);
 	},
@@ -50,17 +51,17 @@ export const scopeService = {
 		return api.delete(`/blue_admin/groupscope/${data?.groupId}/${data?.scopeId}`);
 	},
 //###############################################
-// Resource-Scope relationship endpoints (Many to Many)
+// Now realationshipQeury Endpoints(one to Many)
 //###############################################
-	getScopeResource: (data) => {
-		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`, { page: data?.page, size: data?.size });
+getScopeResource: (data)=>{
+		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 
-	// Get resources that can be assigned to a scope
+	// Get resources that can be assigned to a resource
 	getAvailableResourcesForScope: (scopeId) => {
 	    return api.get(`/blue_admin/resourcecomplementscope/${scopeId}`);
 	},
-	// Get resources already assigned to a scope
+	// Get permissions that can be assigned to a resource
 	getAttachedResourcesForScope: (scopeId) => {
 	    return api.get(`/blue_admin/resourcenoncomplementscope/${scopeId}`);
 	},
@@ -72,4 +73,6 @@ export const scopeService = {
 	deleteResourceScope: (data) => {
 		return api.delete(`/blue_admin/resourcescope/${data?.resourceId}/${data?.scopeId}`);
 	},
+
 }
+

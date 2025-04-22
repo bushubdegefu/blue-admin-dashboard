@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const appService = {
   // Get a paginated list of apps
-  getApps: (data) => {
-    return api.get("/blue_admin/app", { page: data?.page, size: data?.size });
+  getApps: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/app", params);
   },
 
   // Get a specific app by ID

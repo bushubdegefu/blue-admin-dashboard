@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const groupService = {
   // Get a paginated list of groups
-  getGroups: (data) => {
-    return api.get("/blue_admin/group", { page: data?.page, size: data?.size });
+  getGroups: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/group", params);
   },
 
   // Get a specific group by ID
@@ -29,48 +30,49 @@ export const groupService = {
 //###############################################
 // Now realationshipQeury Endpoints(Many to Many)
 //###############################################
-	getGroupUsers: (data) => {
-		return api.get(`/blue_admin/usergroup/${data?.groupId}`, { page: data?.page, size: data?.size });
+	getGroupUser: (data)=>{
+		return api.get(`/blue_admin/usergroup/${data?.groupId}`,{ page: data?.page, size: data?.size });
 	},
 
-	// Get users that can be assigned to a group
+	// Get users that can be assigned to a user
 	getAvailableUsersForGroup: (groupId) => {
 	    return api.get(`/blue_admin/usercomplementgroup/${groupId}`);
 	},
-	// Get users already assigned to a group
+	// Get permissions that can be assigned to a user
 	getAttachedUsersForGroup: (groupId) => {
 	    return api.get(`/blue_admin/usernoncomplementgroup/${groupId}`);
 	},
 
-	addUserToGroup: (data) => {
+	addUserGroup: (data) => {
 		return api.post(`/blue_admin/usergroup/${data?.userId}/${data?.groupId}`);
 	},
 
-	deleteUserFromGroup: (data) => {
+	deleteUserGroup: (data) => {
 		return api.delete(`/blue_admin/usergroup/${data?.userId}/${data?.groupId}`);
 	},
 //###############################################
-// Scope-Group relationship endpoints (Many to Many)
+// Now realationshipQeury Endpoints(Many to Many)
 //###############################################
-	getGroupScopes: (data) => {
-		return api.get(`/blue_admin/scopegroup/${data?.groupId}`, { page: data?.page, size: data?.size });
+	getGroupScope: (data)=>{
+		return api.get(`/blue_admin/scopegroup/${data?.groupId}`,{ page: data?.page, size: data?.size });
 	},
 
-	// Get scopes that can be assigned to a group
+	// Get scopes that can be assigned to a scope
 	getAvailableScopesForGroup: (groupId) => {
 	    return api.get(`/blue_admin/scopecomplementgroup/${groupId}`);
 	},
-	// Get scopes already assigned to a group
+	// Get permissions that can be assigned to a scope
 	getAttachedScopesForGroup: (groupId) => {
 	    return api.get(`/blue_admin/scopenoncomplementgroup/${groupId}`);
 	},
 
-	addScopeToGroup: (data) => {
+	addScopeGroup: (data) => {
 		return api.post(`/blue_admin/scopegroup/${data?.scopeId}/${data?.groupId}`);
 	},
 
-	removeScopeFromGroup: (data) => {
+	deleteScopeGroup: (data) => {
 		return api.delete(`/blue_admin/scopegroup/${data?.scopeId}/${data?.groupId}`);
 	},
 
 }
+

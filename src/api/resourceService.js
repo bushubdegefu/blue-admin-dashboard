@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const resourceService = {
   // Get a paginated list of resources
-  getResources: (data) => {
-    return api.get("/blue_admin/resource", { page: data?.page, size: data?.size });
+  getResources: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/resource", params);
   },
 
   // Get a specific resource by ID

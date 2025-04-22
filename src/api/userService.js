@@ -3,8 +3,9 @@ import { api } from "./client";
 
 export const userService = {
   // Get a paginated list of users
-  getUsers: (data) => {
-    return api.get("/blue_admin/user", { page: data?.page, size: data?.size });
+  getUsers: (params = {}) => {
+    const { page = 1, size = 10 } = params;
+    return api.get("/blue_admin/user", params);
   },
 
   // Get a specific user by ID

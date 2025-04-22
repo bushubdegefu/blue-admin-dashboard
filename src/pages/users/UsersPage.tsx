@@ -2,22 +2,77 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Eye, UserPlus } from "lucide-react";
+import { Eye, UserPlus,Filter, X } from "lucide-react";
 import { User, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { PaginatedDataTable } from "@/components/common/PaginatedDataTable";
+import { DataTable } from "@/components/common/DataTable";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/common/StatusBadge";
 import { formatDate } from "@/lib/utils";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { userService } from "@/api/userService";
 import { toast } from "sonner";
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle,
+  CardFooter
+} from "@/components/ui/card";
+import GenericPagination from "@/components/common/Pagination";
+import { set } from "date-fns";
 
 const UsersPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({});
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const queryClient = useQueryClient();
+
+  const [filters, setFilters] = useState({
+    username: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+  });
+
+   // Create form for filters
+   const filterForm = useForm({
+    defaultValues: {
+      username: '',
+      email: '',
+      first_name: '',
+      last_name: '',
+    }
+  });
+
+   // Clear all filters
+   const clearFilters = () => {
+    filterForm.reset({
+      username: '',
+      email: '',
+      first_name: '',
+      last_name: '',
+    });
+    setFilters({
+      username: '',
+      email: '',
+      first_name: '',
+      last_name: '',
+    });
+    setPage(1);
+  };
+
+  // Toggle filter visibility
+  const toggleFilters = () => {
+    setIsFiltersVisible(!isFiltersVisible);
+  };
+
   const navigate = useNavigate();
 
   // API query with filters
@@ -181,6 +236,110 @@ const UsersPage = () => {
     setFilters(filters);
   };
 
+    // Apply filters from form
+    const applyFilters = (data) => {
+      setFilters(data);
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setPage(1); // Reset to first page when applying new filters
+    };
+
+  const FilterCard= () => (
+    <Card>
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <CardTitle>Filters</CardTitle>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={toggleFilters}
+          className="h-8 w-8"
+        >
+          {isFiltersVisible ? <X size={16} /> : <Filter size={16} />}
+        </Button>
+      </div>
+      <CardDescription>
+        Filter users by any combination of fields
+      </CardDescription>
+    </CardHeader>
+    
+    {isFiltersVisible && (
+      <CardContent>
+        <Form {...filterForm}>
+          <form onSubmit={filterForm.handleSubmit(applyFilters)} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <FormField
+                control={filterForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Filter by username" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={filterForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Filter by email" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={filterForm.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Filter by first name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={filterForm.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Filter by last name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={clearFilters}
+              >
+                Reset
+              </Button>
+              <Button type="submit">
+                Apply Filters
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    )}
+  </Card>
+  );
+  
   return (
     <>
       <PageHeader
@@ -194,20 +353,24 @@ const UsersPage = () => {
           </Link>
         </Button>
       </PageHeader>
-
-      <PaginatedDataTable
+      
+      <DataTable
         columns={columns}
         data={users}
+        filterCard={FilterCard}
+        isLoading={isLoading}
         filterOptions={filterOptions}
         searchPlaceholder="Search users..."
-        isLoading={isLoading}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onFilterChange={handleFilterChange}
-        pageCount={usersResponse?.pages || 1}
+        
+
+      />
+      <GenericPagination 
         totalItems={usersResponse?.total || 0}
-        currentPage={page}
         pageSize={pageSize}
+        currentPage={page}
+        queryKey="users"
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
       />
     </>
   );

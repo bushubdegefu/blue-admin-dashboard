@@ -35,38 +35,25 @@ import { useDebounce } from "@/hooks/use-debounce";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  filterCard: () => JSX.Element;
   filterOptions?: FilterOption[];
   searchPlaceholder?: string;
   isLoading?: boolean;
-  pagination?: {
-    pageIndex: number;
-    pageSize: number;
-    pageCount: number;
-    total: number;
-  };
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
   onFilterChange?: (filters: any) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  filterCard,
   filterOptions = [],
   searchPlaceholder = "Search...",
   isLoading = false,
-  pagination,
-  onPageChange,
-  onPageSizeChange,
   onFilterChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [localPagination, setLocalPagination] = useState<PaginationState>({
-    pageIndex: pagination?.pageIndex ?? 0,
-    pageSize: pagination?.pageSize ?? 10,
-  });
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
   
   // Use debounce for search to avoid too many API calls
@@ -85,16 +72,7 @@ export function DataTable<TData, TValue>({
     }
   }, [debouncedSearchTerm, activeFilters, onFilterChange]);
 
-  // Update local pagination when external pagination changes
-  useEffect(() => {
-    if (pagination) {
-      setLocalPagination({
-        pageIndex: pagination.pageIndex,
-        pageSize: pagination.pageSize,
-      });
-    }
-  }, [pagination]);
-
+  
   const table = useReactTable({
     data,
     columns,
@@ -104,30 +82,13 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
-    manualPagination: !!onPageChange, // If onPageChange is provided, we're using external pagination
-    onPaginationChange: (updater) => {
-      const newPagination = typeof updater === 'function' 
-        ? updater(localPagination)
-        : updater;
-      
-      setLocalPagination(newPagination);
-      
-      // Call external handlers if provided
-      if (onPageChange && newPagination.pageIndex !== localPagination.pageIndex) {
-        onPageChange(newPagination.pageIndex + 1); // Convert to 1-based for API
-      }
-      
-      if (onPageSizeChange && newPagination.pageSize !== localPagination.pageSize) {
-        onPageSizeChange(newPagination.pageSize);
-      }
-    },
+   
     state: {
       sorting,
       globalFilter,
       columnFilters,
-      pagination: localPagination,
+    
     },
-    pageCount: pagination?.pageCount ?? Math.ceil(data.length / localPagination.pageSize),
   });
 
   const handleFilterChange = (field: string, value: string) => {
@@ -286,6 +247,12 @@ export function DataTable<TData, TValue>({
           >
             Clear all
           </Button>
+        </div>
+      )}
+      
+      {filterCard && (
+        <div className="p-4 border rounded-md bg-gray-50">
+          {filterCard()}
         </div>
       )}
 
