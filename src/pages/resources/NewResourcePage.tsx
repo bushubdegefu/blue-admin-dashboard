@@ -1,15 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileCode } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/PageHeader";
-import { ResourceForm } from "@/components/forms/ResourceForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { resourceService } from "@/api/resourceService";
 import { scopeService } from "@/api/scopeService";
 import { Scope } from "@/types";
+import ResourceForm  from "@/components/forms/ResourceForm";
 import { toast } from "sonner";
 
 const NewResourcePage = () => {
@@ -39,7 +38,15 @@ const NewResourcePage = () => {
   });
 
   const handleSave = async (resourceData: any) => {
-    createResourceMutation.mutate(resourceData);
+    try {
+      const response = await resourceService.createResource(resourceData);
+      if (response && response.data) {
+        toast.success("Resource created successfully");
+        navigate(`/resources/${response.data.id}`);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to create resource: ${error.message}`);
+    }
   };
 
   return (
@@ -70,7 +77,7 @@ const NewResourcePage = () => {
             <ResourceForm 
               scopes={scopesResponse || []} 
               onSave={handleSave} 
-              isLoading={createResourceMutation.isPending} 
+              isLoading={false} 
             />
           )}
         </CardContent>

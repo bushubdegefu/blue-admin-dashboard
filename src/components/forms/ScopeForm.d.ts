@@ -1,6 +1,7 @@
 
 export interface ScopeFormProps {
-  onSave: (data: any) => Promise<void> | void;
-  isLoading: boolean;
-  defaultValues?: any;
+  scope?: any;
+  onSave: (formData: any) => Promise<void>;
+  isLoading?: boolean;
+  onCancel?: () => void; // Make onCancel optional
 }

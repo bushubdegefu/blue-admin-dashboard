@@ -1,4 +1,3 @@
-
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -8,15 +7,15 @@ export interface LoginCredentials {
 
 export interface User {
   id: string;
-  uuid: string;
+  username: string;
   email: string;
-  first_name?: string;
+  first_name: string;
+  last_name: string;
   middle_name?: string;
-  last_name?: string;
-  date_registered?: string;
-  active: boolean;
-  groups?: Group[];
-  scopes?: Scope[];
+  disabled?: boolean;
+  date_registered: string;
+  groups?: { id: string; name: string }[];
+  scopes?: { id: string; name: string }[];
 }
 
 export interface Group {

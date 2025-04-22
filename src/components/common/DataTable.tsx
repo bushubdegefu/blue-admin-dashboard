@@ -6,8 +6,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
-  getPaginationRowModel,
-  PaginationState,
   getFilteredRowModel,
   ColumnFiltersState,
   useReactTable
@@ -35,11 +33,14 @@ import { useDebounce } from "@/hooks/use-debounce";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filterCard: () => JSX.Element;
+  filterCard?: () => JSX.Element;
   filterOptions?: FilterOption[];
   searchPlaceholder?: string;
   isLoading?: boolean;
   onFilterChange?: (filters: any) => void;
+  pagination?: any;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -50,6 +51,9 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   isLoading = false,
   onFilterChange,
+  pagination,
+  onPageChange,
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -72,7 +76,6 @@ export function DataTable<TData, TValue>({
     }
   }, [debouncedSearchTerm, activeFilters, onFilterChange]);
 
-  
   const table = useReactTable({
     data,
     columns,
@@ -82,12 +85,10 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
-   
     state: {
       sorting,
       globalFilter,
       columnFilters,
-    
     },
   });
 
@@ -250,25 +251,21 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       
-      {filterCard && (
-        <div className="p-4 border rounded-md bg-gray-50">
-          {filterCard()}
-        </div>
-      )}
+      {filterCard && filterCard()}
 
-      <div className="border rounded-lg overflow-hidden bg-white">
+      <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
         {isLoading ? (
           <div className="w-full h-48 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-admin-600" />
           </div>
         ) : (
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full data-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th key={header.id} className="whitespace-nowrap">
+                      <th key={header.id} className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                         {header.isPlaceholder ? null : (
                           <div
                             className={cn(
@@ -294,10 +291,16 @@ export function DataTable<TData, TValue>({
               </thead>
               <tbody>
                 {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <tr key={row.id}>
+                  table.getRowModel().rows.map((row, i) => (
+                    <tr 
+                      key={row.id} 
+                      className={cn(
+                        "border-b hover:bg-gray-50 transition-colors",
+                        i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                      )}
+                    >
                       {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id}>
+                        <td key={cell.id} className="px-4 py-3">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}

@@ -1,9 +1,7 @@
 
-import { App } from "@/types";
-
 export interface GroupFormProps {
-  apps: App[];
-  onSave: (data: any) => Promise<void> | void;
-  isLoading: boolean;
-  defaultValues?: any;
+  group?: any;
+  onSave: (formData: any) => Promise<void>;
+  isLoading?: boolean;
+  onCancel?: () => void; // Make onCancel optional
 }

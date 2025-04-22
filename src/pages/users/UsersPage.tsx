@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Eye, UserPlus,Filter, X } from "lucide-react";
+import { Eye, UserPlus } from "lucide-react";
 import { User, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -16,17 +15,9 @@ import { toast } from "sonner";
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle,
-  CardFooter
-} from "@/components/ui/card";
+import { FilterCard } from "@/components/common/FilterCard";
 import GenericPagination from "@/components/common/Pagination";
-import { set } from "date-fns";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const UsersPage = () => {
   const [page, setPage] = useState(1);
@@ -66,11 +57,6 @@ const UsersPage = () => {
       last_name: '',
     });
     setPage(1);
-  };
-
-  // Toggle filter visibility
-  const toggleFilters = () => {
-    setIsFiltersVisible(!isFiltersVisible);
   };
 
   const navigate = useNavigate();
@@ -236,110 +222,81 @@ const UsersPage = () => {
     setFilters(filters);
   };
 
-    // Apply filters from form
-    const applyFilters = (data) => {
-      setFilters(data);
-      
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      setPage(1); // Reset to first page when applying new filters
-    };
+  const applyFilters = (data: any) => {
+    setFilters(data);
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+    setPage(1); // Reset to first page when applying new filters
+  };
 
-  const FilterCard= () => (
-    <Card>
-    <CardHeader className="pb-3">
-      <div className="flex items-center justify-between">
-        <CardTitle>Filters</CardTitle>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={toggleFilters}
-          className="h-8 w-8"
-        >
-          {isFiltersVisible ? <X size={16} /> : <Filter size={16} />}
-        </Button>
-      </div>
-      <CardDescription>
-        Filter users by any combination of fields
-      </CardDescription>
-    </CardHeader>
-    
-    {isFiltersVisible && (
-      <CardContent>
-        <Form {...filterForm}>
-          <form onSubmit={filterForm.handleSubmit(applyFilters)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <FormField
-                control={filterForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Filter by username" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={filterForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Filter by email" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={filterForm.control}
-                name="first_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Filter by first name" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={filterForm.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Filter by last name" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+  const FilterCardComponent = () => (
+    <FilterCard 
+      title="User Filters"
+      description="Filter users by any combination of fields"
+      isOpen={isFiltersVisible}
+      onToggle={setIsFiltersVisible}
+      onApply={() => filterForm.handleSubmit(applyFilters)()}
+      onReset={clearFilters}
+    >
+      <Form {...filterForm}>
+        <form onSubmit={filterForm.handleSubmit(applyFilters)} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <FormField
+              control={filterForm.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Filter by username" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             
-            <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={clearFilters}
-              >
-                Reset
-              </Button>
-              <Button type="submit">
-                Apply Filters
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    )}
-  </Card>
+            <FormField
+              control={filterForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Filter by email" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={filterForm.control}
+              name="first_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Filter by first name" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={filterForm.control}
+              name="last_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Filter by last name" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </form>
+      </Form>
+    </FilterCard>
   );
-  
+
   return (
     <>
       <PageHeader
@@ -357,13 +314,12 @@ const UsersPage = () => {
       <DataTable
         columns={columns}
         data={users}
-        filterCard={FilterCard}
+        filterCard={FilterCardComponent}
         isLoading={isLoading}
         filterOptions={filterOptions}
         searchPlaceholder="Search users..."
-        
-
       />
+      
       <GenericPagination 
         totalItems={usersResponse?.total || 0}
         pageSize={pageSize}

@@ -72,7 +72,7 @@ export function RelatedItemsCard({
             <PopoverContent className="w-[300px] p-2">
               <Command>
                 <CommandInput placeholder={`Search ${entityType.toLowerCase()}...`} />
-                <CommandList className="max-h-[200px] overflow-auto">
+                <CommandList>
                   <ScrollArea className="h-[200px]">
                     {availableItems.length > 0 ? (
                       availableItems.map((item) => (
@@ -114,42 +114,44 @@ export function RelatedItemsCard({
                 className="pl-9"
               />
             </div>
-            <ScrollArea className="max-h-60 pr-2">
-              <div className="space-y-2 overflow-y-auto">
-                {filteredAttachedItems.length > 0 ? (
-                  filteredAttachedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">{item?.name}</div>
-                        {item.description && (
-                          <p className="text-xs text-gray-500 truncate">
-                            {item.description}
-                          </p>
+            <div className="overflow-hidden">
+              <ScrollArea className="h-[240px] pr-2">
+                <div className="space-y-2">
+                  {filteredAttachedItems.length > 0 ? (
+                    filteredAttachedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">{item?.name}</div>
+                          {item.description && (
+                            <p className="text-xs text-gray-500 truncate">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        {canManage && onRemoveItem && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-red-500 flex-shrink-0"
+                            onClick={() => onRemoveItem(item.id)}
+                            title={`Remove ${item?.name}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      {canManage && onRemoveItem && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-gray-400 hover:text-red-500 flex-shrink-0"
-                          onClick={() => onRemoveItem(item.id)}
-                          title={`Remove ${item?.name}`}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      No results match your search
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-sm text-gray-500">
-                    No results match your search
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
             <div className="mt-4 flex items-center justify-between border-t pt-3">
               <Badge variant="outline" className="text-xs text-gray-600">
                 {attachedItems?.length} {entityType.toLowerCase()}

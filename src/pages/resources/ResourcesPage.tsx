@@ -69,7 +69,7 @@ const ResourcesPage = () => {
 
   const columnHelper = createColumnHelper<Resource>();
   
-  const columns: TableColumn<Resource>[] = [
+  const columns = [
     {
       header: "Name",
       accessorKey: "name",

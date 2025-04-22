@@ -1,36 +1,71 @@
 
-import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+  useRef
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import Sidebar from "./Sidebar";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { Toaster } from "@/components/ui/toaster";
-import { UserProfileMenu } from "./UserProfileMenu";
+import Navbar from "./Navbar";
 
-const MainLayout = () => {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const location = useLocation();
+export default function MainLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const {
+    isAuthenticated,
+    loading
+  } = useAuth();
+  const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  if (!isAuthenticated && !loading) {
+    return <div></div>;
+  }
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        closeSidebar();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar
-        mobileSidebarOpen={mobileSidebarOpen}
-        setMobileSidebarOpen={setMobileSidebarOpen}
-      />
-      <div className="flex flex-col flex-1">
-        <header className="border-b h-14 flex items-center justify-end px-6 bg-white">
-          <div className="flex items-center gap-4">
-            <UserProfileMenu />
-          </div>
-        </header>
-        <main className="flex-1 p-6 bg-gray-50">
-          <ErrorBoundary key={location.pathname}>
-            <Outlet />
-          </ErrorBoundary>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar  />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar onMenuToggle={toggleSidebar} />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6">
+          {children}
         </main>
       </div>
-      <Toaster />
     </div>
   );
-};
-
-export default MainLayout;
+}

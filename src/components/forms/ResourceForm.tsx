@@ -1,10 +1,9 @@
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Resource } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -13,172 +12,148 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
+// Define form schema with Zod
 const resourceFormSchema = z.object({
-  name: z.string().min(1, "Resource name is required"),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  route_path: z.string().min(1, "Route path is required"),
-  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
-  active: z.boolean().default(true),
+  url_pattern: z.string().optional(),
+  enabled: z.boolean().default(true),
 });
 
-type ResourceFormValues = z.infer<typeof resourceFormSchema>;
-
-interface ResourceFormProps {
-  resource?: Resource;
-  onSave?: (values: ResourceFormValues) => Promise<void>;
+export interface ResourceFormProps {
+  resource?: any;
+  onSave: (resourceData: any) => Promise<void>;
   isLoading?: boolean;
-  onCancel?: () => void;
 }
 
-export function ResourceForm({ 
-  resource, 
-  onSave, 
-  isLoading = false,
-  onCancel
-}: ResourceFormProps) {
-  const form = useForm<ResourceFormValues>({
+const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps) => {
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Set up form with defaultValues
+  const form = useForm<z.infer<typeof resourceFormSchema>>({
     resolver: zodResolver(resourceFormSchema),
     defaultValues: {
       name: resource?.name || "",
       description: resource?.description || "",
-      route_path: resource?.route_path || "",
-      method: resource?.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE" || "GET",
-      active: resource?.active ?? true,
+      url_pattern: resource?.url_pattern || "",
+      enabled: resource?.enabled !== false, // Default to true if not specified
     },
   });
 
-  const handleSubmit = async (values: ResourceFormValues) => {
+  // Define submit handler
+  const handleSubmit = async (values: z.infer<typeof resourceFormSchema>) => {
     try {
-      if (onSave) {
-        await onSave(values);
-      }
-      if (!resource) {
-        form.reset();
-      }
-      toast.success(resource ? "Resource updated successfully" : "Resource created successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to save resource");
+      setSaveError(null);
+      await onSave({
+        ...values,
+        id: resource?.id,
+      });
+    } catch (error: any) {
+      setSaveError(error.message || "Failed to save resource");
+      console.error("Error saving resource:", error);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Resource Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Get User" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Describe what this resource does" 
-                    {...field} 
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="route_path"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Route Path</FormLabel>
-                <FormControl>
-                  <Input placeholder="/api/v1/users" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="method"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>HTTP Method</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <Card className="border-gray-200 shadow-sm">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <CardContent className="space-y-4 pt-5">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select HTTP Method" />
-                    </SelectTrigger>
+                    <Input placeholder="Enter resource name" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
-                    <SelectItem value="PUT">PUT</SelectItem>
-                    <SelectItem value="PATCH">PATCH</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="active"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>Status</FormLabel>
-                  <div className="text-sm text-muted-foreground">
-                    {field.value
-                      ? "This resource is active and available"
-                      : "This resource is inactive and unavailable"}
-                  </div>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex justify-end gap-2">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter resource description"
+                      className="resize-none"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="url_pattern"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL Pattern</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter URL pattern (e.g., /api/resources/*)"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="enabled"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Enabled</FormLabel>
+                    <p className="text-sm text-gray-500">
+                      If enabled, this resource can be accessed by users with appropriate permissions.
+                    </p>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {saveError && (
+              <div className="text-red-500 text-sm mt-2">{saveError}</div>
+            )}
+          </CardContent>
+
+          <CardFooter className="flex justify-between border-t bg-gray-50 px-6 py-4">
+            <Button type="button" variant="outline" disabled={isLoading}>
               Cancel
             </Button>
-          )}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : resource ? "Update Resource" : "Create Resource"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Resource"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
+    </Card>
   );
-}
+};
+
+export default ResourceForm;
