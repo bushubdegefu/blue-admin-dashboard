@@ -1,7 +1,9 @@
 
+import { Scope } from "@/types";
+
 export interface ScopeFormProps {
-  scope?: any;
-  onSave: (formData: any) => Promise<void>;
+  scope?: Scope;
+  onSave: (values: any) => Promise<void>;
   isLoading?: boolean;
-  onCancel?: () => void; // Make onCancel optional
+  onCancel?: () => void;
 }

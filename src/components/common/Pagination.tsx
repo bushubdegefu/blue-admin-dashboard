@@ -101,7 +101,7 @@ function GenericPagination({
         return items;
     };
 
-    const pageSizeOptions = [1,5, 10, 20, 30, 50, 100];
+    const pageSizeOptions = [1, 5, 10, 20, 30, 50, 100];
 
     return (
         <Card className="mt-4 border-gray-200 shadow-sm bg-white">

@@ -1,17 +1,19 @@
+
 import { FilterCard } from "@/components/common/FilterCard";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
 import { FilterOption } from "@/types";
 import { FC, useState } from "react";
+
 interface FilterCardProps { 
     columns: FilterOption[];
     queryKey: string;
     setFilters: (filters: any) => void;
     filterForm: any;
     clearFilters: () => void;
-    setPage: (oageNum: number) => void;
-  }
+    setPage: (pageNum: number) => void;
+}
 
 const GenericFilterCard: FC<FilterCardProps> = ({
     columns,
@@ -23,8 +25,8 @@ const GenericFilterCard: FC<FilterCardProps> = ({
 }) => {
     const queryClient = useQueryClient();
     const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+    
     const applyFilters = (data: any) => {
-        console.log(data)
         setFilters(data);
         queryClient.invalidateQueries({ queryKey: [queryKey] });
         setPage(1);
@@ -78,4 +80,4 @@ const GenericFilterCard: FC<FilterCardProps> = ({
     );
 };
 
-  export default GenericFilterCard;
+export default GenericFilterCard;

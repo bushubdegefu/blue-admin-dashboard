@@ -1,186 +1,150 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+
+import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { appService } from "@/api/appService";
-import { scopeService } from "@/api/scopeService";
 import { toast } from "sonner";
-import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
-import { ChevronRight } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AppDetailsPage = () => {
-  const { appId } = useParams();
+  const { id: appId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [newAppName, setNewAppName] = useState("");
 
   // Fetch app details
   const { data: app, isLoading: isAppLoading, error: appError } = useQuery({
-    queryKey: ['app', appId],
-    queryFn: () => appService.getAppById(appId),
+    queryKey: ["app", appId],
+    queryFn: () => appService.getAppById(appId || ""),
     enabled: !!appId,
   });
 
-  // Fetch scopes for the app
-  const { data: appScopes, isLoading: isAppScopesLoading, error: appScopesError } = useQuery({
-    queryKey: ['app-scopes', appId],
-    queryFn: () => appService.getAppScopes(appId),
+  // Fetch attached groups for app
+  const { data: attachedGroups, isLoading: isAttachedGroupsLoading } = useQuery({
+    queryKey: ["attached-groups", appId],
+    queryFn: () => appService.getAttachedGroupsForApp(appId || ""),
     enabled: !!appId,
   });
 
-  // Fetch available scopes
-  const { data: availableScopes, isLoading: isAvailableScopesLoading, error: availableScopesError } = useQuery({
-    queryKey: ['available-scopes'],
-    queryFn: () => scopeService.getScopes(),
+  // Fetch available groups for app
+  const { data: availableGroups, isLoading: isAvailableGroupsLoading } = useQuery({
+    queryKey: ["available-groups", appId],
+    queryFn: () => appService.getAvailableGroupsForApp(appId || ""),
+    enabled: !!appId,
   });
 
-  useEffect(() => {
-    if (app) {
-      setNewAppName(app.name);
-    }
-  }, [app]);
+  // Mutations for adding and removing groups
+  const addGroupMutation = useMutation({
+    mutationFn: (groupId: string) => 
+      appService.addGroupApp({ groupId, appId: appId || "" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attached-groups", appId] });
+      queryClient.invalidateQueries({ queryKey: ["available-groups", appId] });
+      toast.success("Group added to app");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to add group: ${error.message}`);
+    },
+  });
 
-  // Handlers for adding and removing scopes
-  const handleAddScope = async (scopeId: string): Promise<void> => {
-  try {
-    await appService.addAppScope({
-      appId: appId,
-      scopeId: scopeId
-    });
-    queryClient.invalidateQueries({ queryKey: ['app-scopes', appId] });
-    toast.success("Scope added successfully");
-    return Promise.resolve();
-  } catch (error: any) {
-    toast.error(`Failed to add scope: ${error.message}`);
-    return Promise.resolve();
-  }
-};
+  const removeGroupMutation = useMutation({
+    mutationFn: (groupId: string) => 
+      appService.deleteGroupApp({ groupId, appId: appId || "" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attached-groups", appId] });
+      queryClient.invalidateQueries({ queryKey: ["available-groups", appId] });
+      toast.success("Group removed from app");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to remove group: ${error.message}`);
+    },
+  });
 
-const handleRemoveScope = async (scopeId: string): Promise<void> => {
-  try {
-    await appService.deleteAppScope({
-      appId: appId,
-      scopeId: scopeId
-    });
-    queryClient.invalidateQueries({ queryKey: ['app-scopes', appId] });
-    toast.success("Scope removed successfully");
-    return Promise.resolve();
-  } catch (error: any) {
-    toast.error(`Failed to remove scope: ${error.message}`);
-    return Promise.resolve();
-  }
-};
-
-
-  const handleEditName = () => {
-    setIsEditingName(true);
+  const handleAddGroup = (groupId: string) => {
+    addGroupMutation.mutate(groupId);
   };
 
-  const handleCancelEditName = () => {
-    setIsEditingName(false);
-    setNewAppName(app.name);
-  };
-
-  const handleNameUpdate = async (newName: string): Promise<void> => {
-  try {
-    await appService.updateApp({
-      appId: app.id,
-      appData: { name: newName }
-    });
-    queryClient.invalidateQueries({ queryKey: ['app', appId] });
-    toast.success("App name updated");
-    return Promise.resolve();
-  } catch (error: any) {
-    toast.error(`Failed to update app name: ${error.message}`);
-    return Promise.reject(error);
-  }
-};
-
-
-  const handleSaveName = async () => {
-    if (newAppName && newAppName !== app.name) {
-      await handleNameUpdate(newAppName);
-    }
-    setIsEditingName(false);
+  const handleRemoveGroup = (groupId: string) => {
+    removeGroupMutation.mutate(groupId);
   };
 
   if (isAppLoading) {
-    return <div>Loading app details...</div>;
+    return <div className="p-6">Loading app details...</div>;
   }
 
   if (appError) {
-    return <div>Error: {appError.message}</div>;
+    return <div className="p-6">Error: {(appError as Error).message}</div>;
   }
 
   if (!app) {
-    return <div>App not found</div>;
+    return <div className="p-6">App not found</div>;
   }
-
-  const availableScopesForApp = availableScopes?.data?.filter(scope => {
-    return !appScopes?.data?.some(appScope => appScope.id === scope.id);
-  }) || [];
 
   return (
     <>
-      <PageHeader
-        title={isEditingName ? (
-          <Input
-            value={newAppName}
-            onChange={(e) => setNewAppName(e.target.value)}
-            onBlur={handleSaveName}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSaveName();
-              }
-            }}
-          />
-        ) : (
-          <div className="flex items-center">
-            {app.name}
-            <Button variant="ghost" size="sm" onClick={handleEditName}>
-              Edit
-            </Button>
-          </div>
-        )}
-        description="Manage app details and associated scopes"
-      >
-        {!isEditingName && (
-          <Button variant="outline" onClick={handleCancelEditName}>
-            Cancel
-          </Button>
-        )}
+      <PageHeader title="App Details" description={app.description || "No description provided"}>
+        <Button asChild>
+          <Link to="/apps">Back to Apps</Link>
+        </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent>
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">App Details</h3>
-              <p>
-                <strong>ID:</strong> {app.id}
-              </p>
-              <p>
-                <strong>Name:</strong> {app.name}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="w-full mt-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="groups">Groups</TabsTrigger>
+        </TabsList>
 
-        <RelatedItemsCard
-          title={`Scopes (${appScopes?.data?.length || 0})`}
-          availableItems={availableScopesForApp}
-          attachedItems={appScopes?.data || []}
-          entityType="Scope"
-          onAddItems={handleAddScope}
-          onRemoveItem={handleRemoveScope}
-          canManage={true}
-          emptyMessage="No scopes associated with this app."
-        />
-      </div>
+        <TabsContent value="overview" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Details</CardTitle>
+              <CardDescription>View app details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">ID</div>
+                    <div className="font-medium">{app.id}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Name</div>
+                    <div className="font-medium">{app.name}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-sm text-muted-foreground">Description</div>
+                    <div className="font-medium">{app.description || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Client ID</div>
+                    <div className="font-medium">{app.clientId || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Status</div>
+                    <div className="font-medium">{app.active ? "Active" : "Inactive"}</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="groups" className="space-y-4">
+          <RelatedItemsCard
+            title={`Groups (${attachedGroups?.length || 0})`}
+            availableItems={availableGroups || []}
+            attachedItems={attachedGroups || []}
+            entityType="Group"
+            emptyMessage="No groups assigned to this app."
+            onAddItems={handleAddGroup}
+            onRemoveItem={handleRemoveGroup}
+            canManage={true}
+          />
+        </TabsContent>
+      </Tabs>
     </>
   );
 };
