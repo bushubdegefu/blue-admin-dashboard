@@ -14,18 +14,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { resourceService } from "@/api/resourceService";
 import { useForm } from "react-hook-form";
 import GenericFilterCard from "@/components/common/GenricFilterCard";
+import GenericPagination from "@/components/common/Pagination";
 
 const ResourcesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState({
     name: '',
-    route_path: '',
     method: '',
   });
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
     
@@ -180,7 +179,6 @@ const ResourcesPage = () => {
 
   const filterOptions: FilterOption[] = [
     { field: "name", label: "Name", type: "text" },
-    { field: "route_path", label: "Route Path", type: "text" },
     { 
       field: "method", 
       label: "Method", 
@@ -199,7 +197,6 @@ const ResourcesPage = () => {
    const filterForm = useForm({
     defaultValues: {
       name: '',
-      route_path: '',
       method: '',
       }
   });
@@ -208,14 +205,12 @@ const ResourcesPage = () => {
    const clearFilters = () => {
     filterForm.reset({
       name: '',
-      route_path: '',
       method: '',
     });
 
 
     setFilters({
       name: '',
-      route_path: '',
       method: '',
     });
     setPage(1);
@@ -260,19 +255,18 @@ const ResourcesPage = () => {
       <DataTable
         columns={columns}
         data={resources}
+        isLoading={isLoading}
         filterOptions={filterOptions}
         searchPlaceholder="Search resources..."
-        isLoading={isLoading}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onFilterChange={handleFilterChange}
-        pagination={{
-          pageIndex: page - 1,
-          pageSize,
-          pageCount: resourcesResponse?.pages || 1,
-          total: resourcesResponse?.total || 0
-        }}
       />
+      <GenericPagination
+          totalItems={resourcesResponse?.total || 0}
+          pageSize={pageSize}
+          currentPage={page}
+          queryKey="users"
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
 
       <ConfirmDialog
         open={confirmDialogOpen}

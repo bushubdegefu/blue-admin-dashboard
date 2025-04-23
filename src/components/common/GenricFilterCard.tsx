@@ -24,6 +24,7 @@ const GenericFilterCard: FC<FilterCardProps> = ({
     const queryClient = useQueryClient();
     const [isFiltersVisible, setIsFiltersVisible] = useState(false);
     const applyFilters = (data: any) => {
+        console.log(data)
         setFilters(data);
         queryClient.invalidateQueries({ queryKey: [queryKey] });
         setPage(1);

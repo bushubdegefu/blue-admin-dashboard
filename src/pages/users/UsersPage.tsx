@@ -231,7 +231,6 @@ const UsersPage = () => {
       <DataTable
         columns={columns}
         data={users}
-        // filterCard={FilterCardComponent}
         isLoading={isLoading}
         filterOptions={filterOptions}
         searchPlaceholder="Search users..."

@@ -16,7 +16,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RelatedItemsCard } from "@/components/common/RelatedItemsCard";
+import { RelatedItemsCard, RelatedItemsCardUser } from "@/components/common/RelatedItemsCard";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -97,6 +97,25 @@ const GroupDetailsPage = () => {
     queryKey: ["available_scopes", id],
     queryFn: () => groupService.getAvailableScopesForGroup(id as string),
     enabled: !!id && isAddScopesDialogOpen
+  });
+
+   // Fetch available users for the group
+   const { 
+    data: attachedUsersData,
+    isLoading: isLoadingAttachedUsers
+  } = useQuery({
+    queryKey: ["attached_users", id],
+    queryFn: () => groupService.getAttachedUsersForGroup(id as string),
+  });
+
+  // Fetch available scopes for the group
+  const { 
+    data: attachedScopesData,
+    isLoading: isLoadingAttachedScopes
+  } = useQuery({
+    queryKey: ["attached_scopes", id],
+    queryFn: () => groupService.getAttachedScopesForGroup(id as string),
+   
   });
 
   const group = groupResponse?.data;
@@ -308,18 +327,6 @@ const GroupDetailsPage = () => {
     );
   }
 
-  // Related items for overview
-  const users = (group.users || []).slice(0, 5).map(user => ({
-    id: user.id,
-    name: `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`,
-    description: user.email,
-  }));
-
-  const scopes = (group.scopes || []).slice(0, 5).map(scope => ({
-    id: scope.id,
-    name: scope.name,
-    description: scope.description || "",
-  }));
 
   return (
     <>
@@ -398,9 +405,9 @@ const GroupDetailsPage = () => {
                 </CardContent>
               </Card>
 
-              <RelatedItemsCard 
+              <RelatedItemsCardUser 
                 title="Associated Users"
-                attachedItems={users}
+                attachedItems={attachedUsersData?.data}
                 availableItems={[]}
                 entityType="User"
                 emptyMessage="No users associated with this group"
@@ -410,7 +417,7 @@ const GroupDetailsPage = () => {
 
             <RelatedItemsCard 
               title="Associated Scopes"
-              attachedItems={scopes}
+              attachedItems={attachedScopesData?.data}
               availableItems={[]}
               entityType="Scope"
               emptyMessage="No scopes associated with this group"

@@ -18,10 +18,29 @@ export interface RelatedItem {
   description?: string;
 }
 
+export interface RelatedItemUser {
+  id: string;
+  username: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  email: string;
+}
+
 interface RelatedItemsCardProps {
   title: string;
   availableItems: RelatedItem[];
   attachedItems: RelatedItem[];
+  entityType: string;
+  emptyMessage?: string;
+  onAddItems?: (id: string) => void;
+  onRemoveItem?: (id: string) => void;
+  canManage?: boolean;
+}
+interface RelatedItemsCardPropsUser {
+  title: string;
+  availableItems: RelatedItemUser[];
+  attachedItems: RelatedItemUser[];
   entityType: string;
   emptyMessage?: string;
   onAddItems?: (id: string) => void;
@@ -82,7 +101,7 @@ export function RelatedItemsCard({
                           className="flex items-center cursor-pointer hover:bg-gray-100 p-2"
                         >
                           <div className="flex-1 truncate">
-                            <div className="font-medium">{item.name}</div>
+                            <div className="font-medium">{item?.name}</div>
                             {item.description && (
                               <p className="text-xs text-gray-500 truncate mt-0.5">{item.description}</p>
                             )}
@@ -138,6 +157,147 @@ export function RelatedItemsCard({
                             className="h-7 w-7 text-gray-400 hover:text-red-500 flex-shrink-0"
                             onClick={() => onRemoveItem(item.id)}
                             title={`Remove ${item?.name}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      No results match your search
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
+              <Badge variant="outline" className="text-xs text-gray-600">
+                {attachedItems?.length} {entityType.toLowerCase()}
+                {attachedItems?.length !== 1 && "s"}
+              </Badge>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8 text-sm text-gray-500">
+            {emptyMessage}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+export function RelatedItemsCardUser({
+  title,
+  availableItems,
+  attachedItems,
+  entityType,
+  emptyMessage = "No items found",
+  onAddItems,
+  onRemoveItem,
+  canManage = false,
+}: RelatedItemsCardPropsUser) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const filteredAttachedItems = attachedItems?.filter(item =>
+    item?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAdd = (id: string) => {
+    if (onAddItems) {
+      onAddItems(id);
+      setPopoverOpen(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all hover:shadow-md">
+      <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
+        <h3 className="font-medium text-gray-900 flex items-center gap-2">{title}</h3>
+        {canManage && onAddItems && (
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1 text-xs"
+              >
+                <PlusCircle className="h-3 w-3" />
+                Add {entityType}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-2">
+              <Command>
+                <CommandInput placeholder={`Search ${entityType.toLowerCase()}...`} />
+                <CommandList>
+                  <ScrollArea className="h-[200px]">
+                    {availableItems.length > 0 ? (
+                      availableItems.map((item) => (
+                        <CommandItem
+                          key={item.id}
+                          onSelect={() => handleAdd(item.id)}
+                          className="flex items-center cursor-pointer hover:bg-gray-100 p-2"
+                        >
+                          <div className="flex-1 truncate">
+                            <div className="font-medium">{item?.username}</div>
+                            {item?.email && (
+                              <p className="text-xs text-gray-500 truncate mt-0.5">{item?.email}</p>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500 px-2 py-4 text-center">
+                        No {entityType.toLowerCase()}s available
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
+
+      <div className="p-4">
+        {attachedItems && attachedItems.length > 0 ? (
+          <>
+            <div className="mb-4 relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder={`Search attached ${entityType.toLowerCase()}s...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="overflow-hidden">
+              <ScrollArea className="h-[240px] pr-2">
+                <div className="space-y-2">
+                  {filteredAttachedItems.length > 0 ? (
+                    filteredAttachedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">{item?.first_name} {item?.last_name}</div>
+                          {item?.email && (
+                            <p className="text-xs text-gray-500 truncate">
+                              {item?.email}
+                            </p>
+                          )}
+                        </div>
+                        {canManage && onRemoveItem && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-red-500 flex-shrink-0"
+                            onClick={() => onRemoveItem(item.id)}
+                            title={`Remove ${item?.username}`}
                           >
                             <X className="h-4 w-4" />
                           </Button>

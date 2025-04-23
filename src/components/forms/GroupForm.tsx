@@ -51,6 +51,7 @@ export function GroupForm({
     defaultValues: {
       name: group?.name || "",
       description: group?.description || "",
+      active: group?.active || false,
      },
   });
 
@@ -98,6 +99,29 @@ export function GroupForm({
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="active"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Group Status</FormLabel>
+                  <div className="text-sm text-muted-foreground">
+                    {field.value
+                      ? "This group is active and can be accessed"
+                      : "This group is inactive and won't have effect on user"}
+                  </div>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />

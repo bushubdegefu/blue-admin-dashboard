@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,14 +16,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Define form schema with Zod
 const resourceFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  url_pattern: z.string().optional(),
-  enabled: z.boolean().default(true),
+  route_path: z.string().optional(),
+  method: z.enum(["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"], {
+    required_error: "Method is required",
+    invalid_type_error: "Invalid HTTP method",
+  }),
 });
 
 export interface ResourceFormProps {
@@ -40,8 +52,8 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
     defaultValues: {
       name: resource?.name || "",
       description: resource?.description || "",
-      url_pattern: resource?.url_pattern || "",
-      enabled: resource?.enabled !== false, // Default to true if not specified
+      route_path: resource?.url_pattern || "",
+      method: resource?.enabled || "GET", // Default to true if not specified
     },
   });
 
@@ -99,10 +111,10 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
 
             <FormField
               control={form.control}
-              name="url_pattern"
+              name="route_path"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL Pattern</FormLabel>
+                  <FormLabel>URL Path (Pattern)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter URL pattern (e.g., /api/resources/*)"
@@ -115,27 +127,36 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="enabled"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+          <FormField
+            control={form.control}
+            name="method"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>HTTP Method</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a method" />
+                    </SelectTrigger>
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Enabled</FormLabel>
-                    <p className="text-sm text-gray-500">
-                      If enabled, this resource can be accessed by users with appropriate permissions.
-                    </p>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"].map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {method}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Choose the HTTP method for the resource.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
             {saveError && (
               <div className="text-red-500 text-sm mt-2">{saveError}</div>
