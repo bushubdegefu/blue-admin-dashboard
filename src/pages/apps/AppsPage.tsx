@@ -116,18 +116,6 @@ const AppsPage = () => {
       ),
     },
     {
-      id: "groups",
-      header: "Groups",
-      accessorKey: "groups",
-      cell: (info: any) => {
-        const groups = info.row.original.groups || [];
-        const count = groups.length;
-        return (
-          <div className="text-sm">{count} group{count !== 1 ? "s" : ""}</div>
-        );
-      },
-    },
-    {
       id: "actions",
       header: "Actions",
       accessorKey: "id",

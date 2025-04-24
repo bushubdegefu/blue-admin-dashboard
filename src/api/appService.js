@@ -30,7 +30,7 @@ export const appService = {
 //###############################################
 // Now realationshipQeury Endpoints(one to Many)
 //###############################################
-getAppGroup: (data)=>{
+  getAppGroup: (data)=>{
 		return api.get(`/blue_admin/groupapp/${data?.appId}`,{ page: data?.page, size: data?.size });
 	},
 

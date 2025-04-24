@@ -1,8 +1,7 @@
 
-import { Scope } from "@/types";
 
 export interface ScopeFormProps {
-  scope?: Scope;
+  scope?: any;
   onSave: (values: any) => Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;

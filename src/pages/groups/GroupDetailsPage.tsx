@@ -33,7 +33,6 @@ const GroupDetailsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUsersDialogOpen, setIsAddUsersDialogOpen] = useState(false);
   const [isAddScopesDialogOpen, setIsAddScopesDialogOpen] = useState(false);
@@ -143,7 +142,6 @@ const GroupDetailsPage = () => {
     onSuccess: () => {
       toast.success("Group updated successfully");
       queryClient.invalidateQueries({ queryKey: ["group", id] });
-      setIsEditDialogOpen(false);
     },
     onError: (error: Error) => {
       toast.error(`Failed to update group: ${error.message}`);
@@ -332,14 +330,6 @@ const GroupDetailsPage = () => {
     <>
       <PageHeader title={group.name} description={group.description || "No description"}>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsEditDialogOpen(true)}
-          >
-            <Pencil className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
           <Button
             variant="destructive"
             size="sm"
@@ -370,38 +360,12 @@ const GroupDetailsPage = () => {
                   <CardTitle className="text-lg">Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Name</div>
-                    <div>{group.name}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Description</div>
-                    <div>{group.description || "No description"}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Status</div>
-                    <StatusBadge active={group.active ?? true} />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">ID</div>
-                    <div className="font-mono text-xs">{group.id}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">UUID</div>
-                    <div className="font-mono text-xs">{group.uuid}</div>
-                  </div>
-                  {group.app && (
-                    <div>
-                      <div className="text-sm text-gray-500 mb-1">Application</div>
-                      <Link 
-                        to={`/apps/${group.app.id}`}
-                        className="text-admin-600 hover:text-admin-800 hover:underline flex items-center"
-                      >
-                        {group.app.name}
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </Link>
-                    </div>
-                  )}
+                <GroupForm
+                      group={group}
+                      apps={[]} // Pass an empty array or the appropriate apps data
+                      onSave={handleUpdateGroup}
+                      isLoading={updateGroupMutation.isPending}     
+                    />
                 </CardContent>
               </Card>
 
@@ -508,15 +472,6 @@ const GroupDetailsPage = () => {
         variant="destructive"
         isLoading={deleteGroupMutation.isPending}
       />
-
-      {isEditDialogOpen && (
-        <GroupForm
-          group={group}
-          apps={[]} // Pass an empty array or the appropriate apps data
-          onSave={handleUpdateGroup}
-          isLoading={updateGroupMutation.isPending}     
-        />
-      )}
 
       <Dialog open={isAddUsersDialogOpen} onOpenChange={setIsAddUsersDialogOpen}>
         <DialogContent className="sm:max-w-xl">

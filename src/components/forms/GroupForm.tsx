@@ -71,6 +71,16 @@ export function GroupForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {group?.id && (
+          <div className="w-full">
+          <div className="p-4 border rounded-md bg-gray-50">
+            <div className="text-sm font-medium">Group ID</div>
+            <div className="mt-1 text-xs font-mono bg-gray-100 p-2 rounded">
+              {group?.id}
+            </div>
+          </div>           
+        </div>
+        )}
         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}

@@ -61,6 +61,26 @@ export function AppForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      {app?.id && (
+          <div className="w-full">
+          <div className="p-4 border rounded-md bg-gray-50">
+            <div className="text-sm font-medium">App ID</div>
+            <div className="mt-1 text-xs font-mono bg-gray-100 p-2 rounded">
+              {app?.id}
+            </div>
+          </div>           
+        </div>
+        )}
+        {app?.uuid && (
+          <div className="w-full">
+          <div className="p-4 border rounded-md bg-gray-50">
+            <div className="text-sm font-medium">APP UUID</div>
+            <div className="mt-1 text-xs font-mono bg-gray-100 p-2 rounded">
+              {app?.uuid}
+            </div>
+          </div>           
+        </div>
+        )}
         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
