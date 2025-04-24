@@ -152,11 +152,11 @@ export function EntitySelectorUser({
   const [searchTerm, setSearchTerm] = useState("");
   
   const filteredAvailableItems = availableItems.filter(item =>
-    item.username.toLowerCase().includes(searchTerm.toLowerCase())
+    item?.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const filteredSelectedItems = selectedItems.filter(item =>
-    item.username.toLowerCase().includes(searchTerm.toLowerCase())
+    item?.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -220,7 +220,7 @@ export function EntitySelectorUser({
                 <div className="p-2">
                   {filteredSelectedItems.length > 0 ? (
                     <ul className="space-y-1">
-                      {filteredSelectedItems.map(item => (
+                      {filteredSelectedItems?.map(item => (
                         <li key={item.id}>
                           <Button
                             variant="ghost"

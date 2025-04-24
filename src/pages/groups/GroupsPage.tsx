@@ -110,38 +110,6 @@ const GroupsPage = () => {
       cell: (info: any) => <StatusBadge active={info.getValue() as boolean} />,
     },
     {
-      id: "users",
-      header: "Users",
-      accessorKey: "users",
-      cell: (info: any) => {
-        const users = info.row.original.users || [];
-        const count = users.length;
-        return (
-          <div className="text-sm">
-            {count} user{count !== 1 ? "s" : ""}
-          </div>
-        );
-      },
-    },
-    {
-      id: "app",
-      header: "App",
-      accessorKey: "app",
-      cell: (info: any) => {
-        const app = info.getValue() as any;
-        return app ? (
-          <Link
-            to={`/apps/${app.id}`}
-            className="text-admin-600 hover:text-admin-800 hover:underline"
-          >
-            {app.name}
-          </Link>
-        ) : (
-          <span className="text-gray-400 text-xs">No app</span>
-        );
-      },
-    },
-    {
       id: "actions",
       header: "Actions",
       accessorKey: "id",

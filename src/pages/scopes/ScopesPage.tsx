@@ -104,39 +104,6 @@ const ScopesPage = () => {
       ),
     },
     {
-      header: "Resources",
-      accessorKey: "resources",
-      cell: (info: any) => {
-        const resources = info.row.original.resources || [];
-        const count = resources.length;
-        return (
-          <div className="text-sm">{count} resource{count !== 1 ? "s" : ""}</div>
-        );
-      },
-    },
-    {
-      header: "Users",
-      accessorKey: "users",
-      cell: (info: any) => {
-        const users = info.row.original.users || [];
-        const count = users.length;
-        return (
-          <div className="text-sm">{count} user{count !== 1 ? "s" : ""}</div>
-        );
-      },
-    },
-    {
-      header: "Groups",
-      accessorKey: "groups",
-      cell: (info: any) => {
-        const groups = info.row.original.groups || [];
-        const count = groups.length;
-        return (
-          <div className="text-sm">{count} group{count !== 1 ? "s" : ""}</div>
-        );
-      },
-    },
-    {
       header: "Actions",
       accessorKey: "id",
       cell: (info: any) => (

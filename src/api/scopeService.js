@@ -51,6 +51,29 @@ export const scopeService = {
 		return api.delete(`/blue_admin/groupscope/${data?.groupId}/${data?.scopeId}`);
 	},
 //###############################################
+// Now realationshipQeury Endpoints(Many to Many)
+//###############################################
+	getScopeUser: (data)=>{
+		return api.get(`/blue_admin/userscope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+	},
+
+	// Get users that can be assigned to a user
+	getAvailableUsersForScope: (scopeId) => {
+	    return api.get(`/blue_admin/usercomplementscope/${scopeId}`);
+	},
+	// Get permissions that can be assigned to a user
+	getAttachedUsersForScope: (scopeId) => {
+	    return api.get(`/blue_admin/usernoncomplementscope/${scopeId}`);
+	},
+
+	addUserScope: (data) => {
+		return api.post(`/blue_admin/userscope/${data?.userId}/${data?.scopeId}`);
+	},
+
+	deleteUserScope: (data) => {
+		return api.delete(`/blue_admin/userscope/${data?.userId}/${data?.scopeId}`);
+	},
+//###############################################
 // Now realationshipQeury Endpoints(one to Many)
 //###############################################
 	getScopeResource: (data)=>{

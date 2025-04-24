@@ -119,54 +119,7 @@ const UsersPage = () => {
         />
       ),
     },
-    {
-      header: "Groups",
-      accessorKey: "groups",
-      cell: (info: any) => {
-        const groups = info.row.original.groups || [];
-        return groups.length > 0 ? (
-          <div className="space-y-1">
-            {groups.slice(0, 2).map((group: any) => (
-              <div key={group.id} className="text-xs px-2 py-1 bg-gray-100 rounded-full inline-block mr-1">
-                {group.name}
-              </div>
-            ))}
-            {groups.length > 2 && (
-              <div className="text-xs text-gray-500">
-                +{groups.length - 2} more
-              </div>
-            )}
-          </div>
-        ) : (
-          <span className="text-gray-400 text-xs">No groups</span>
-        );
-      },
-      enableSorting: false,
-    },
-    {
-      header: "Scopes",
-      accessorKey: "scopes",
-      cell: (info: any) => {
-        const scopes = info.row.original.scopes || [];
-        return scopes.length > 0 ? (
-          <div className="space-y-1">
-            {scopes.slice(0, 2).map((scope: any) => (
-              <div key={scope.id} className="text-xs px-2 py-1 bg-gray-100 rounded-full inline-block mr-1">
-                {scope.name}
-              </div>
-            ))}
-            {scopes.length > 2 && (
-              <div className="text-xs text-gray-500">
-                +{scopes.length - 2} more
-              </div>
-            )}
-          </div>
-        ) : (
-          <span className="text-gray-400 text-xs">No scopes</span>
-        );
-      },
-      enableSorting: false,
-    },
+  
     {
       header: "Registered",
       accessorKey: "date_registered",

@@ -33,6 +33,7 @@ import NewResourcePage from "./pages/resources/NewResourcePage";
 // Apps
 import AppsPage from "./pages/apps/AppsPage";
 import NewAppPage from "./pages/apps/NewAppPage";
+import AppDetailsPage from "./pages/apps/AppDetailsPage";
 
 // Create a new client with updated default options
 const queryClient = new QueryClient({
@@ -88,6 +89,7 @@ const App = () => (
                 
                 {/* Apps Routes */}
                 <Route path="/apps" element={<AppsPage />} />
+                <Route path="/apps/:id" element={<AppDetailsPage />} />
                 <Route path="/apps/new" element={<NewAppPage />} />
               </Route>
             </Route>
