@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -43,7 +42,11 @@ export interface ResourceFormProps {
   isLoading?: boolean;
 }
 
-const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps) => {
+export function ResourceForm({ 
+  resource, 
+  onSave, 
+  isLoading = false 
+}: ResourceFormProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Set up form with defaultValues
@@ -83,7 +86,11 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter resource name" {...field} />
+                    <Input 
+                      placeholder="Enter resource name" 
+                      {...field} 
+                      className="font-medium"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,7 +106,7 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
                   <FormControl>
                     <Textarea
                       placeholder="Enter resource description"
-                      className="resize-none"
+                      className="resize-none min-h-[100px]"
                       {...field}
                       value={field.value || ""}
                     />
@@ -119,6 +126,7 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
                     <Input
                       placeholder="Enter URL pattern (e.g., /api/resources/*)"
                       {...field}
+                      className="font-mono text-sm"
                       value={field.value || ""}
                     />
                   </FormControl>
@@ -127,54 +135,54 @@ const ResourceForm = ({ resource, onSave, isLoading = false }: ResourceFormProps
               )}
             />
 
-          <FormField
-            control={form.control}
-            name="method"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>HTTP Method</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a method" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"].map((method) => (
-                      <SelectItem key={method} value={method}>
-                        {method}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Choose the HTTP method for the resource.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="method"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>HTTP Method</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="font-mono">
+                        <SelectValue placeholder="Select a method" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"].map((method) => (
+                        <SelectItem key={method} value={method} className="font-mono">
+                          {method}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Choose the HTTP method for the resource.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {saveError && (
               <div className="text-red-500 text-sm mt-2">{saveError}</div>
             )}
           </CardContent>
 
-          <CardFooter className="flex justify-between border-t bg-gray-50 px-6 py-4">
+          <CardFooter className="flex justify-between border-t bg-gray-50/50 px-6 py-4">
             <Button type="button" variant="outline" disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Resource"}
+              {isLoading ? "Saving..." : resource ? "Update Resource" : "Create Resource"}
             </Button>
           </CardFooter>
         </form>
       </Form>
     </Card>
   );
-};
+}
 
 export default ResourceForm;

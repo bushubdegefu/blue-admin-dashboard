@@ -27,8 +27,6 @@ const ResourcesPage = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-    
-  // Get resources with React Query
   const { 
     data: resourcesResponse, 
     isLoading,
@@ -53,7 +51,6 @@ const ResourcesPage = () => {
 
   const resources = resourcesResponse?.data || [];
 
-  // Delete resource mutation
   const deleteResourceMutation = useMutation({
     mutationFn: (resourceId: string) => resourceService.deleteResource(resourceId),
     onSuccess: () => {
@@ -78,9 +75,9 @@ const ResourcesPage = () => {
       header: "Name",
       accessorKey: "name",
       cell: (info) => (
-        <div>
+        <div className="space-y-1">
           <div className="font-medium">{info.getValue() as string}</div>
-          <div className="text-xs text-gray-500">ID: {info.row.original.id}</div>
+          <div className="text-xs text-gray-500 font-mono">ID: {info.row.original.id}</div>
         </div>
       ),
     },
@@ -88,7 +85,9 @@ const ResourcesPage = () => {
       header: "Route Path",
       accessorKey: "route_path",
       cell: (info) => (
-        <div className="font-mono text-xs">{info.getValue() as string}</div>
+        <div className="font-mono text-xs bg-gray-50 px-2 py-1 rounded">
+          {info.getValue() as string}
+        </div>
       ),
     },
     {
@@ -193,21 +192,18 @@ const ResourcesPage = () => {
     },
   ];
 
-   // Create form for filters
-   const filterForm = useForm({
+  const filterForm = useForm({
     defaultValues: {
       name: '',
       method: '',
-      }
+    }
   });
 
-   // Clear all filters
-   const clearFilters = () => {
+  const clearFilters = () => {
     filterForm.reset({
       name: '',
       method: '',
     });
-
 
     setFilters({
       name: '',
@@ -215,8 +211,6 @@ const ResourcesPage = () => {
     });
     setPage(1);
   };
-
-
 
   const handlePageChange = (page: number) => {
     setPage(page);

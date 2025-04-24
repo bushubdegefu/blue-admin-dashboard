@@ -16,6 +16,7 @@ export interface User {
   date_registered: string;
   groups?: { id: string; name: string }[];
   scopes?: { id: string; name: string }[];
+  uuid?: string;
 }
 
 export interface Group {
@@ -121,5 +122,4 @@ export interface ResourceFormProps {
   onSave: (values: any) => Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;
-  scopes?: Scope[];
 }
