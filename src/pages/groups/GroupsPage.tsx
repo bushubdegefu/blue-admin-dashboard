@@ -119,7 +119,7 @@ const GroupsPage = () => {
             {
               label: "View Details",
               icon: <Eye className="h-4 w-4 mr-2" />,
-              onClick: () => navigate(`/groups/${info.getValue()}`),
+              onClick: () => navigate(`/admin/groups/${info.getValue()}`),
             },
             {
               label: "Delete",
@@ -178,7 +178,7 @@ const GroupsPage = () => {
     <>
       <PageHeader title="Groups" description="Manage user groups in the system">
         <Button asChild>
-          <Link to="/groups/new">
+          <Link to="/admin/groups/new">
             <Plus className="h-4 w-4 mr-2" />
             New Group
           </Link>

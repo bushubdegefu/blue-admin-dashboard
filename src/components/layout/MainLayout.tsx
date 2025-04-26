@@ -28,7 +28,7 @@ export default function MainLayout({
     }
 
     if (!isAuthenticated) {
-      navigate("/login");
+      navigate("/admin/login");
     }
   }, [isAuthenticated, loading, navigate]);
 

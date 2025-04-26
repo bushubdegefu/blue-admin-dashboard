@@ -46,7 +46,7 @@ const LoginPage = () => {
         password: values.password,
         token: "Bearer",
       });
-      navigate("/")
+      navigate("/admin/")
       // Auth context will handle the redirect and toast notifications
     } catch (error) {
       console.error("Login error:", error);

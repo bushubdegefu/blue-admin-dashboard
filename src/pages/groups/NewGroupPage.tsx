@@ -30,7 +30,7 @@ const NewGroupPage = () => {
     mutationFn: (groupData: any) => groupService.createGroup(groupData),
     onSuccess: (data) => {
       toast.success("Group created successfully");
-      navigate(`/groups`);
+      navigate(`/admin/groups`);
     },
     onError: (error: any) => {
       console.error("Error creating group:", error);
@@ -45,7 +45,7 @@ const NewGroupPage = () => {
   return (
     <>
       <PageHeader title="Create Group">
-        <Button variant="outline" onClick={() => navigate("/groups")}>
+        <Button variant="outline" onClick={() => navigate("/admin/groups")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Groups
         </Button>

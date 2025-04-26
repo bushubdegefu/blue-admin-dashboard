@@ -215,6 +215,20 @@ const UserDetailsPage = () => {
                         </div>
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 border rounded-md bg-gray-50">
+                        <div className="text-sm font-medium">GoogleID</div>
+                        <div className="mt-1 text-xs font-mono bg-gray-100 p-2 rounded">
+                          {user?.google_id}
+                        </div>
+                      </div>
+                      <div className="p-4 border rounded-md bg-gray-50">
+                        <div className="text-sm font-medium">MicrosoftID</div>
+                        <div className="mt-1 text-xs font-mono bg-gray-100 p-2 rounded break-all">
+                          {user?.microsoft_d}
+                        </div>
+                      </div>
+                    </div>
                     <div className="p-4 border rounded-md bg-gray-50">
                       <div className="text-sm font-medium">Registration Date</div>
                       <div className="mt-1">

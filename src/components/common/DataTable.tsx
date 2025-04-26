@@ -36,6 +36,8 @@ interface DataTableProps<TData, TValue> {
   filterOptions?: FilterOption[];
   searchPlaceholder?: string;
   isLoading?: boolean;
+  isEditing?: boolean; // Flag to indicate if the table is in editing mode
+  onEdit?: (rowIndex: number, updatedRow: TData) => void; // Callback for saving edits
   onFilterChange?: (filters: any) => void;
   pagination?: any;
   onPageChange?: (page: number) => void;
@@ -48,6 +50,8 @@ export function DataTable<TData, TValue>({
   filterOptions = [],
   searchPlaceholder = "Search...",
   isLoading = false,
+  isEditing = false,
+  onEdit,
   onFilterChange,
   pagination,
   onPageChange,

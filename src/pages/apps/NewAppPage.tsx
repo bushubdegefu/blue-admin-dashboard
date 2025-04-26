@@ -18,7 +18,7 @@ const NewAppPage = () => {
     mutationFn: (appData: any) => appService.createApp(appData),
     onSuccess: (data) => {
       toast.success("Application created successfully");
-      navigate(`/apps`);
+      navigate(`/admin/apps`);
     },
     onError: (error: any) => {
       console.error("Error creating application:", error);
@@ -33,7 +33,7 @@ const NewAppPage = () => {
   return (
     <>
       <PageHeader title="Create Application">
-        <Button variant="outline" onClick={() => navigate("/apps")}>
+        <Button variant="outline" onClick={() => navigate("/admin/apps")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Applications
         </Button>

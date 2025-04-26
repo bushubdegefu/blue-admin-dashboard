@@ -125,7 +125,7 @@ const AppsPage = () => {
             {
               label: "View Details",
               icon: <Eye className="h-4 w-4 mr-2" />,
-              onClick: () => navigate(`/apps/${info.getValue()}`),
+              onClick: () => navigate(`/admin/apps/${info.getValue()}`),
             },
             {
               label: "Delete",
@@ -196,7 +196,7 @@ const AppsPage = () => {
         description="Manage applications in the system"
       >
         <Button asChild>
-          <Link to="/apps/new">
+          <Link to="/admin/apps/new">
             <Plus className="h-4 w-4 mr-2" />
             New Application
           </Link>

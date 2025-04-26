@@ -112,7 +112,7 @@ const ScopesPage = () => {
             {
               label: "View Details",
               icon: <Eye className="h-4 w-4 mr-2" />,
-              onClick: () => navigate(`/scopes/${info.getValue()}`),
+              onClick: () => navigate(`/admin/scopes/${info.getValue()}`),
             },
             {
               label: "Delete",
@@ -182,7 +182,7 @@ const ScopesPage = () => {
         description="Manage authorization scopes in the system"
       >
         <Button asChild>
-          <Link to="/scopes/new">
+          <Link to="/admin/scopes/new">
             <Plus className="h-4 w-4 mr-2" />
             New Scope
           </Link>

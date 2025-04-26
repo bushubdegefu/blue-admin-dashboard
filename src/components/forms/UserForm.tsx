@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +14,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 const userFormSchema = z.object({
@@ -29,6 +37,11 @@ const userFormSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .optional()
     .or(z.literal("")),
+  auth_provider: z.enum(["Local", "Microsoft", "Google"], {
+    required_error: "Auth provider is required",
+    invalid_type_error:
+      "Auth provider must be one of: Local, Microsoft, Google",
+  }),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -52,6 +65,8 @@ export function UserForm({ user, onSave, isLoading = false }: UserFormProps) {
       last_name: user?.last_name || "",
       disabled: user?.disabled || false,
       password: "",
+      auth_provider:
+        (user?.auth_provider as "Local" | "Microsoft" | "Google") || "Local",
     },
   });
 
@@ -62,7 +77,9 @@ export function UserForm({ user, onSave, isLoading = false }: UserFormProps) {
         form.reset();
       }
       setChangePassword(false);
-      toast.success(user ? "User updated successfully" : "User created successfully");
+      toast.success(
+        user ? "User updated successfully" : "User created successfully"
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to save user");
@@ -93,7 +110,11 @@ export function UserForm({ user, onSave, isLoading = false }: UserFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john.doe@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,7 +164,9 @@ export function UserForm({ user, onSave, isLoading = false }: UserFormProps) {
               <div className="space-y-0.5">
                 <FormLabel>Password</FormLabel>
                 <div className="text-sm text-muted-foreground">
-                  {changePassword ? "Update user password" : "Keep current password"}
+                  {changePassword
+                    ? "Update user password"
+                    : "Keep current password"}
                 </div>
               </div>
               <FormControl>
@@ -194,7 +217,28 @@ export function UserForm({ user, onSave, isLoading = false }: UserFormProps) {
             </FormItem>
           )}
         />
-
+        <FormField
+          control={form.control}
+          name="auth_provider"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Authentication Provider</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    {field.value || "Select an option"}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Local">Local</SelectItem>
+                    <SelectItem value="Microsoft">Microsoft</SelectItem>
+                    <SelectItem value="Google">Google</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Saving..." : user ? "Update User" : "Create User"}

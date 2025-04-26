@@ -54,7 +54,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/login" element={<LoginPage />} />
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
@@ -65,32 +65,32 @@ const App = () => (
                   </MainLayout>
                 }
               >
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin/" element={<Dashboard />} />
+                <Route path="/admiin/dashboard" element={<Dashboard />} />
                 
                 {/* Users Routes */}
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/users/:id" element={<UserDetailsPage />} />
-                <Route path="/users/new" element={<NewUserPage />} />
+                <Route path="/admin/users" element={<UsersPage />} />
+                <Route path="/admin/users/:id" element={<UserDetailsPage />} />
+                <Route path="/admin/users/new" element={<NewUserPage />} />
                 
                 {/* Groups Routes */}
-                <Route path="/groups" element={<GroupsPage />} />
-                <Route path="/groups/:id" element={<GroupDetailsPage />} />
-                <Route path="/groups/new" element={<NewGroupPage />} />
+                <Route path="/admin/groups" element={<GroupsPage />} />
+                <Route path="/admin/groups/:id" element={<GroupDetailsPage />} />
+                <Route path="/admin/groups/new" element={<NewGroupPage />} />
                 
                 {/* Scopes Routes */}
-                <Route path="/scopes" element={<ScopesPage />} />
-                <Route path="/scopes/:id" element={<ScopeDetailsPage />} />
-                <Route path="/scopes/new" element={<NewScopePage />} />
+                <Route path="/admin/scopes" element={<ScopesPage />} />
+                <Route path="/admin/scopes/:id" element={<ScopeDetailsPage />} />
+                <Route path="/admin/scopes/new" element={<NewScopePage />} />
                 
                 {/* Resources Routes */}
-                <Route path="/resources" element={<ResourcesPage />} />
-                <Route path="/resources/new" element={<NewResourcePage />} />
+                <Route path="/admin/resources" element={<ResourcesPage />} />
+                <Route path="/admin/resources/new" element={<NewResourcePage />} />
                 
                 {/* Apps Routes */}
-                <Route path="/apps" element={<AppsPage />} />
-                <Route path="/apps/:id" element={<AppDetailsPage />} />
-                <Route path="/apps/new" element={<NewAppPage />} />
+                <Route path="/admin/apps" element={<AppsPage />} />
+                <Route path="/admin/apps/:id" element={<AppDetailsPage />} />
+                <Route path="/admin/apps/new" element={<NewAppPage />} />
               </Route>
             </Route>
             

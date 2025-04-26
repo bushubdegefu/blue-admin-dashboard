@@ -134,7 +134,7 @@ const UsersPage = () => {
             {
               label: "View Details",
               icon: <Eye className="h-4 w-4 mr-2" />,
-              onClick: () => navigate(`/users/${info.getValue()}`),
+              onClick: () => navigate(`/admin/users/${info.getValue()}`),
             },
           ]}
         />
@@ -167,7 +167,7 @@ const UsersPage = () => {
         description="Manage user accounts in the system"
       >
         <Button asChild>
-          <Link to="/users/new">
+          <Link to="/admin/users/new">
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
           </Link>

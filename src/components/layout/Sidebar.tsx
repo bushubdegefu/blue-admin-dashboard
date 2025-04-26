@@ -59,12 +59,12 @@ const Sidebar = () => {
   };
 
   const navigationItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: Users, label: "Users", href: "/users" },
-    { icon: UserCircle, label: "Groups", href: "/groups" },
-    { icon: Key, label: "Scopes", href: "/scopes" },
-    { icon: FolderKey, label: "Resources", href: "/resources" },
-    { icon: Layers, label: "Apps", href: "/apps" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/" },
+    { icon: Users, label: "Users", href: "/admin/users" },
+    { icon: UserCircle, label: "Groups", href: "/admin/groups" },
+    { icon: Key, label: "Scopes", href: "/admin/scopes" },
+    { icon: FolderKey, label: "Resources", href: "/admin/resources" },
+    { icon: Layers, label: "Apps", href: "/admin/apps" },
   ];
 
   return (

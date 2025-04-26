@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Trash2, Plus, ExternalLink } from "lucide-react";
+import { Trash2, Plus, ExternalLink, Edit2 } from "lucide-react";
 import { Resource, TableColumn, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -155,8 +155,15 @@ const ResourcesPage = () => {
       header: "Actions",
       accessorKey: "id",
       cell: (info) => (
+          <>
+        
         <ActionMenu
           actions={[
+            {
+              label: "Edit",
+              icon: <Edit2 className="h-4 w-4 mr-2" />,
+              onClick: () => { console.log("edit clicked") },
+            },
             {
               label: "Delete",
               icon: <Trash2 className="h-4 w-4 mr-2" />,
@@ -170,7 +177,8 @@ const ResourcesPage = () => {
               variant: "destructive",
             },
           ]}
-        />
+          />
+          </>
       ),
       enableSorting: false,
     },
@@ -231,7 +239,7 @@ const ResourcesPage = () => {
         description="Manage API resources in the system"
       >
         <Button asChild>
-          <Link to="/resources/new">
+          <Link to="/admin/resources/new">
             <Plus className="h-4 w-4 mr-2" />
             New Resource
           </Link>

@@ -17,6 +17,9 @@ export interface User {
   groups?: { id: string; name: string }[];
   scopes?: { id: string; name: string }[];
   uuid?: string;
+  google_id?: string;
+  microsoft_id?: string;
+  auth_provider?: string;
 }
 
 export interface Group {

@@ -29,7 +29,7 @@ const NewResourcePage = () => {
     mutationFn: (resourceData: any) => resourceService.createResource(resourceData),
     onSuccess: (data) => {
       toast.success("Resource created successfully");
-      navigate(`/resources/${data.id}`);
+      navigate(`/admin/resources/`);
     },
     onError: (error: any) => {
       console.error("Error creating resource:", error);
@@ -52,7 +52,7 @@ const NewResourcePage = () => {
   return (
     <>
       <PageHeader title="Create Resource">
-        <Button variant="outline" onClick={() => navigate("/resources")}>
+        <Button variant="outline" onClick={() => navigate("/admin/resources")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Resources
         </Button>
@@ -75,7 +75,7 @@ const NewResourcePage = () => {
             </div>
           ) : (
             <ResourceForm 
-              scopes={scopesResponse || []} 
+              resource={scopesResponse || []} 
               onSave={handleSave} 
               isLoading={false} 
             />

@@ -18,7 +18,7 @@ const NewScopePage = () => {
     mutationFn: (scopeData: any) => scopeService.createScope(scopeData),
     onSuccess: (data) => {
       toast.success("Scope created successfully");
-      navigate(`/scopes`);
+      navigate(`/admin/scopes`);
     },
     onError: (error: any) => {
       console.error("Error creating scope:", error);
@@ -33,7 +33,7 @@ const NewScopePage = () => {
   return (
     <>
       <PageHeader title="Create Scope">
-        <Button variant="outline" onClick={() => navigate("/scopes")}>
+        <Button variant="outline" onClick={() => navigate("/admin/scopes")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Scopes
         </Button>
