@@ -30,7 +30,7 @@ const resourceFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   route_path: z.string().optional(),
-  method: z.enum(["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"], {
+  method: z.enum(["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD","PUT"], {
     required_error: "Method is required",
     invalid_type_error: "Invalid HTTP method",
   }),
@@ -40,12 +40,14 @@ export interface ResourceFormProps {
   resource?: any;
   onSave: (resourceData: any) => Promise<void>;
   isLoading?: boolean;
+  onCancel?: (state: boolean) => void;
 }
 
 export function ResourceForm({ 
   resource, 
   onSave, 
-  isLoading = false 
+  isLoading = false,
+  onCancel, 
 }: ResourceFormProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -55,7 +57,7 @@ export function ResourceForm({
     defaultValues: {
       name: resource?.name || "",
       description: resource?.description || "",
-      route_path: resource?.url_pattern || "",
+      route_path: resource?.route_path || "",
       method: resource?.enabled || "GET", // Default to true if not specified
     },
   });
@@ -73,6 +75,7 @@ export function ResourceForm({
       console.error("Error saving resource:", error);
     }
   };
+  console.log("ResourceForm values:", form.getValues());
 
   return (
     <Card className="border-gray-200 shadow-sm">
@@ -151,7 +154,7 @@ export function ResourceForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"].map((method) => (
+                      {["GET", "POST","PUT" ,"PATCH", "DELETE", "OPTIONS", "HEAD"].map((method) => (
                         <SelectItem key={method} value={method} className="font-mono">
                           {method}
                         </SelectItem>
@@ -172,7 +175,7 @@ export function ResourceForm({
           </CardContent>
 
           <CardFooter className="flex justify-between border-t bg-gray-50/50 px-6 py-4">
-            <Button type="button" variant="outline" disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={()=>onCancel(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

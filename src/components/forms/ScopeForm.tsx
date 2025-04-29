@@ -127,7 +127,7 @@ export function ScopeForm({
         </div>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
+          <Button className="shadow-xl" type="submit" disabled={isLoading}>
             {isLoading ? "Saving..." : scope ? "Update Scope" : "Create Scope"}
           </Button>
         </div>

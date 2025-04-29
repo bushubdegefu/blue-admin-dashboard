@@ -1,48 +1,68 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Trash2, Plus, ExternalLink, Edit2 } from "lucide-react";
-import { Resource, TableColumn, FilterOption } from "@/types";
+import { Trash2, Plus, ExternalLink, Edit2, X, Save } from "lucide-react";
+import { Resource, FilterOption } from "@/types";
 import PageHeader from "@/components/layout/PageHeader";
-import { DataTable } from "@/components/common/DataTable";
-import { ActionMenu } from "@/components/common/ActionMenu";
+import { ActionMenu, ActionMenuCol } from "@/components/common/ActionMenu";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { resourceService } from "@/api/resourceService";
 import { useForm } from "react-hook-form";
 import GenericFilterCard from "@/components/common/GenricFilterCard";
 import GenericPagination from "@/components/common/Pagination";
+import { DataTableEdit } from "@/components/common/DataTableEdit";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { set } from "date-fns";
+import ResourceForm from "@/components/forms/ResourceForm";
 
 const ResourcesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isEditResource, setIsEditResource] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [resourcesEdit, setResourcesEdit] = useState<any>({
+    name: "",
+    method: "",
+    route_path: "",
+    description: "",
+  }); // or however you define it
+
   const [filters, setFilters] = useState({
-    name: '',
-    method: '',
+    name: "",
+    method: "",
   });
-  const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
+  const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(
+    null
+  );
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { 
-    data: resourcesResponse, 
+  const {
+    data: resourcesResponse,
     isLoading,
-    error
+    error,
   } = useQuery({
-    queryKey: ['resources', page, pageSize, filters],
-    queryFn: () => resourceService.getResources({
-      page,
-      size: pageSize,
-      ...filters
-    }),
+    queryKey: ["resources", page, pageSize, filters],
+    queryFn: () =>
+      resourceService.getResources({
+        page,
+        size: pageSize,
+        ...filters,
+      }),
     meta: {
       onError: (err: any) => {
         toast.error(`Error loading resources: ${err.message}`);
-      }
-    }
+      },
+    },
   });
 
   if (error) {
@@ -51,21 +71,40 @@ const ResourcesPage = () => {
 
   const resources = resourcesResponse?.data || [];
 
-  const deleteResourceMutation = useMutation({
-    mutationFn: (resourceId: string) => resourceService.deleteResource(resourceId),
+  // Update group mutation
+  const updateResourceMutation = useMutation({
+    mutationFn: (data: any) =>
+      resourceService.updateResource({
+        resourceId: data?.id,
+        resourceData: data,
+      }),
     onSuccess: () => {
-      toast.success(`Resource "${resourceToDelete?.name}" deleted successfully`);
-      queryClient.invalidateQueries({ queryKey: ['resources'] });
+      toast.success("Resource updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["resources", page,pageSize,filters] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update Resource: ${error.message}`);
+    },
+  });
+
+  const deleteResourceMutation = useMutation({
+    mutationFn: (resourceId: string) =>
+      resourceService.deleteResource(resourceId),
+    onSuccess: () => {
+      toast.success(
+        `Resource "${resourceToDelete?.name}" deleted successfully`
+      );
+      queryClient.invalidateQueries({ queryKey: ["resources",  page,pageSize,filters] });
       setResourceToDelete(null);
       setConfirmDialogOpen(false);
     },
     onError: (error: any) => {
       toast.error(`Failed to delete resource: ${error.message}`);
       setConfirmDialogOpen(false);
-    }
+    },
   });
 
-  const handleDeleteResource = () => {
+  const handleDeleteResource = (resourceToDelete) => {
     if (!resourceToDelete) return;
     deleteResourceMutation.mutate(resourceToDelete.id);
   };
@@ -77,7 +116,9 @@ const ResourcesPage = () => {
       cell: (info) => (
         <div className="space-y-1">
           <div className="font-medium">{info.getValue() as string}</div>
-          <div className="text-xs text-gray-500 font-mono">ID: {info.row.original.id}</div>
+          <div className="text-xs text-gray-500 font-mono">
+            ID: {info.row.original.id}
+          </div>
         </div>
       ),
     },
@@ -96,7 +137,7 @@ const ResourcesPage = () => {
       cell: (info) => {
         const method = info.getValue() as string;
         let color = "";
-        
+
         switch (method) {
           case "GET":
             color = "bg-green-100 text-green-800";
@@ -116,7 +157,7 @@ const ResourcesPage = () => {
           default:
             color = "bg-gray-100 text-gray-800";
         }
-        
+
         return (
           <Badge variant="outline" className={`${color} font-mono`}>
             {method}
@@ -129,56 +170,42 @@ const ResourcesPage = () => {
       accessorKey: "description",
       cell: (info) => (
         <div className="max-w-xs truncate">
-          {info.getValue() as string || <span className="text-gray-400 text-xs">No description</span>}
+          {(info.getValue() as string) || (
+            <span className="text-gray-400 text-xs">No description</span>
+          )}
         </div>
       ),
     },
     {
-      header: "Scope",
-      accessorKey: "scope_id",
-      cell: (info) => {
-        const scope = info.row.original.scope;
-        return scope ? (
-          <Link 
-            to={`/scopes/${scope.id}`} 
-            className="text-admin-600 hover:text-admin-800 hover:underline flex items-center"
-          >
-            {scope.name}
-            <ExternalLink className="h-3 w-3 ml-1" />
-          </Link>
-        ) : (
-          <span className="text-gray-400 text-xs">No scope</span>
-        );
-      },
-    },
-    {
       header: "Actions",
       accessorKey: "id",
-      cell: (info) => (
-          <>
-        
-        <ActionMenu
-          actions={[
-            {
-              label: "Edit",
-              icon: <Edit2 className="h-4 w-4 mr-2" />,
-              onClick: () => { console.log("edit clicked") },
-            },
-            {
-              label: "Delete",
-              icon: <Trash2 className="h-4 w-4 mr-2" />,
-              onClick: () => {
-                const resource = resources.find(r => r.id === info.getValue());
-                if (resource) {
-                  setResourceToDelete(resource);
-                  setConfirmDialogOpen(true);
-                }
+      cell: (info) => (   
+
+      
+          <ActionMenu
+            actions={[
+              {
+                label: "Edit",
+                icon: <Edit2 className="h-4 w-4 mr-2" />,
+                onClick: () => {
+                  console.log(resourcesEdit)
+                  setResourcesEdit({ ...info.row.original });
+                  setEditingRowId(info.getValue() as string);
+                  setIsEditResource(true) // Start editing
+                },
               },
-              variant: "destructive",
-            },
-          ]}
+              {
+                label: "Delete",
+                icon: <Trash2 className="h-4 w-4 mr-2" />,
+                onClick: () => {
+                  setResourceToDelete(info.row.original);
+                  setConfirmDialogOpen(true);
+                },
+                variant: "destructive",
+              },
+            ]}
           />
-          </>
+        
       ),
       enableSorting: false,
     },
@@ -186,9 +213,9 @@ const ResourcesPage = () => {
 
   const filterOptions: FilterOption[] = [
     { field: "name", label: "Name", type: "text" },
-    { 
-      field: "method", 
-      label: "Method", 
+    {
+      field: "method",
+      label: "Method",
       type: "select",
       options: [
         { label: "GET", value: "GET" },
@@ -196,40 +223,34 @@ const ResourcesPage = () => {
         { label: "PUT", value: "PUT" },
         { label: "PATCH", value: "PATCH" },
         { label: "DELETE", value: "DELETE" },
-      ]
+        { label: "HEAD", value: "HEAD" },
+        { label: "OPTIONS", value: "OPTIONS" },
+      ],
     },
   ];
 
   const filterForm = useForm({
     defaultValues: {
-      name: '',
-      method: '',
-    }
+      name: "",
+      method: "",
+    },
   });
 
   const clearFilters = () => {
     filterForm.reset({
-      name: '',
-      method: '',
+      name: "",
+      method: "",
     });
 
     setFilters({
-      name: '',
-      method: '',
+      name: "",
+      method: "",
     });
     setPage(1);
   };
 
-  const handlePageChange = (page: number) => {
-    setPage(page);
-  };
-
-  const handlePageSizeChange = (pageSize: number) => {
-    setPageSize(pageSize);
-  };
-
-  const handleFilterChange = (filters: any) => {
-    setFilters(filters);
+  const handleUpdateResource = async (formData: any) => {
+    updateResourceMutation.mutate(formData);
   };
 
   return (
@@ -245,7 +266,7 @@ const ResourcesPage = () => {
           </Link>
         </Button>
       </PageHeader>
-      <GenericFilterCard 
+      <GenericFilterCard
         columns={filterOptions}
         queryKey="resources"
         setFilters={setFilters}
@@ -254,7 +275,7 @@ const ResourcesPage = () => {
         setPage={setPage}
       />
 
-      <DataTable
+      <DataTableEdit
         columns={columns}
         data={resources}
         isLoading={isLoading}
@@ -262,14 +283,13 @@ const ResourcesPage = () => {
         searchPlaceholder="Search resources..."
       />
       <GenericPagination
-          totalItems={resourcesResponse?.total || 0}
-          pageSize={pageSize}
-          currentPage={page}
-          queryKey="users"
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-        />
-
+        totalItems={resourcesResponse?.total || 0}
+        pageSize={pageSize}
+        currentPage={page}
+        queryKey="users"
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
       <ConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
@@ -277,10 +297,24 @@ const ResourcesPage = () => {
         description={`Are you sure you want to delete the resource "${resourceToDelete?.name}"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
-        onConfirm={handleDeleteResource}
+        onConfirm={() => handleDeleteResource(resourceToDelete)}
         variant="destructive"
         isLoading={deleteResourceMutation.isPending}
       />
+
+      <Dialog open={isEditResource} onOpenChange={setIsEditResource}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add Scopes to Group</DialogTitle>
+          </DialogHeader>
+          <ResourceForm
+            resource={resourcesEdit}
+            onSave={handleUpdateResource}
+            isLoading={updateResourceMutation.isPending}
+            onCancel={setIsEditResource}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

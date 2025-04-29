@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   DropdownMenu,
@@ -9,12 +8,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ActionItem = {
   label: string;
   onClick: () => void;
   icon?: React.ReactNode;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
   disabled?: boolean;
 };
 
@@ -61,5 +72,37 @@ export const ActionMenu = ({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+};
+
+export const ActionMenuCol = ({
+  actions,
+  trigger,
+  className,
+}: ActionMenuProps) => {
+  if (actions.length === 0) return null;
+
+  return (
+    <div className="w-full flex flex-row space-x-1">
+      <div></div>
+      {actions.map((action, index) => (
+        <TooltipProvider key={index}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={action.onClick}
+                disabled={action.disabled}
+                variant="outline"
+              >
+                {action.icon}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{action.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+    </div>
   );
 };

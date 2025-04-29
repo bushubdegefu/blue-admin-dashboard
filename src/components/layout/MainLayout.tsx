@@ -58,14 +58,15 @@ export default function MainLayout({
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar  />
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex bushu flex-row items-stretch bg-gray-50">
+        
+      <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar onMenuToggle={toggleSidebar} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6">
           {children}
         </main>
+        </div>
       </div>
-    </div>
   );
 }

@@ -139,7 +139,7 @@ export function GroupForm({
         </div>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
+          <Button className="shadow-lg" type="submit" disabled={isLoading}>
             {isLoading ? "Saving..." : group ? "Update Group" : "Create Group"}
           </Button>
         </div>

@@ -172,7 +172,7 @@ const UserDetailsPage = () => {
   return (
     <>
       <PageHeader title="User Details">
-        <Button variant="outline" onClick={() => navigate("/users")}>
+        <Button variant="outline" onClick={() => navigate("/admin/users")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Users
         </Button>

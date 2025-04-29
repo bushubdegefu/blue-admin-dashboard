@@ -42,7 +42,7 @@ const NewResourcePage = () => {
       const response = await resourceService.createResource(resourceData);
       if (response && response.data) {
         toast.success("Resource created successfully");
-        navigate(`/resources/${response.data.id}`);
+        navigate(`/admin/resources/${response.data.id}`);
       }
     } catch (error: any) {
       toast.error(`Failed to create resource: ${error.message}`);

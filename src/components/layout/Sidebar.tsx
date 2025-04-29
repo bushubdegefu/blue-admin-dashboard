@@ -70,7 +70,7 @@ const Sidebar = () => {
   return (
     <div
       className={cn(
-        "border-r border-gray-200 bg-white transition-all duration-300 h-screen flex flex-col",
+        " border-r border-gray-200 flex-shrink-0  bg-white transition-all duration-300  flex flex-col",
         collapsed ? "w-[70px]" : "w-[250px]"
       )}
     >
@@ -92,7 +92,7 @@ const Sidebar = () => {
           {collapsed ? <Menu size={20} /> : <X size={20} />}
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto py-4 px-3">
+      <div className="flex-1  overflow-y-auto py-4 px-3">
         <nav className="space-y-1">
           {navigationItems.map((item) => (
             <SidebarItem

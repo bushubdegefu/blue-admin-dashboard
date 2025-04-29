@@ -15,7 +15,7 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/common/DataTable";
-import { PlusCircle } from "lucide-react";
+import { ArrowLeft, PlusCircle } from "lucide-react";
 import GenericPagination from "@/components/common/Pagination";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -437,8 +437,8 @@ const ScopeDetailsPage = () => {
         title="Scope Details"
         description={scopeData?.description || "No description provided"}
       >
-        <Button asChild>
-          <Link to="/scopes">Back to Scopes</Link>
+        <Button variant="outline" className="shadow-xl" asChild>
+          <Link to="/admin/scopes"> <ArrowLeft  /> Back to Scopes</Link>
         </Button>
       </PageHeader>
 

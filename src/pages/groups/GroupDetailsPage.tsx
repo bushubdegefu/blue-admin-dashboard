@@ -4,26 +4,22 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
-  Pencil, 
   Trash2, 
-  Users, 
-  CheckCircle2,
-  ExternalLink,
-  MapPin,
-  PlusCircle
+  PlusCircle,
+  BackpackIcon,
+  ArrowLeft
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RelatedItemsCard, RelatedItemsCardUser } from "@/components/common/RelatedItemsCard";
-import { ActionMenu } from "@/components/common/ActionMenu";
+
 import StatusBadge from "@/components/common/StatusBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { GroupForm } from "@/components/forms/GroupForm";
 import { EntitySelector, EntitySelectorUser } from "@/components/common/EntitySelector";
 import { groupService } from "@/api/groupService";
-import { Group, TableColumn } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DataTable } from "@/components/common/DataTable";
 import GenericPagination from "@/components/common/Pagination";
@@ -330,14 +326,11 @@ const GroupDetailsPage = () => {
     <>
       <PageHeader title={group.name} description={group.description || "No description"}>
         <div className="flex items-center gap-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setIsDeleteDialogOpen(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
+        <Button variant="outline" className="shadow-xl" asChild>
+           <Link to="/admin/groups">
+           <ArrowLeft  /> Back Grops
+           </Link>
+        </Button>
         </div>
       </PageHeader>
 
@@ -361,10 +354,10 @@ const GroupDetailsPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <GroupForm
-                      group={group}
-                      apps={[]} // Pass an empty array or the appropriate apps data
-                      onSave={handleUpdateGroup}
-                      isLoading={updateGroupMutation.isPending}     
+                    group={group}
+                    apps={[]} // Pass an empty array or the appropriate apps data
+                    onSave={handleUpdateGroup}
+                    isLoading={updateGroupMutation.isPending}     
                     />
                 </CardContent>
               </Card>
