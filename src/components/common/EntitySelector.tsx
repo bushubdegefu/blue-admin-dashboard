@@ -35,12 +35,12 @@ export function EntitySelector({
 }: EntitySelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   
-  const filteredAvailableItems = availableItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAvailableItems = availableItems?.filter(item =>
+    item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const filteredSelectedItems = selectedItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSelectedItems = selectedItems?.filter(item =>
+    item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -151,12 +151,12 @@ export function EntitySelectorUser({
 }: EntitySelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   
-  const filteredAvailableItems = availableItems.filter(item =>
-    item?.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAvailableItems = availableItems?.filter(item =>
+    item?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const filteredSelectedItems = selectedItems.filter(item =>
-    item?.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSelectedItems = selectedItems?.filter(item =>
+    item?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -218,7 +218,7 @@ export function EntitySelectorUser({
             <Card className="border-gray-200">
               <ScrollArea className="h-64">
                 <div className="p-2">
-                  {filteredSelectedItems.length > 0 ? (
+                  {filteredSelectedItems?.length > 0 ? (
                     <ul className="space-y-1">
                       {filteredSelectedItems?.map(item => (
                         <li key={item.id}>
@@ -247,7 +247,7 @@ export function EntitySelectorUser({
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <div className="text-sm text-gray-500">
-          {selectedItems.length} items selected
+          {selectedItems?.length} items selected
         </div>
       </CardFooter>
     </Card>

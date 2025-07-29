@@ -1,4 +1,3 @@
-
 import { api } from "./client";
 
 export const appService = {
@@ -30,8 +29,8 @@ export const appService = {
 //###############################################
 // Now realationshipQeury Endpoints(one to Many)
 //###############################################
-  getAppGroup: (data)=>{
-		return api.get(`/blue_admin/groupapp/${data?.appId}`,{ page: data?.page, size: data?.size });
+	getAppGroup: (data)=>{
+		return api.get(`/blue_admin/appgroup/${data?.appId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get groups that can be assigned to a group
@@ -44,12 +43,11 @@ export const appService = {
 	},
 
 	addGroupApp: (data) => {
-		return api.post(`/blue_admin/groupapp/${data?.groupId}/${data?.appId}`);
+		return api.post(`/blue_admin/appgroup/${data?.groupId}/${data?.appId}`);
 	},
 
 	deleteGroupApp: (data) => {
-		return api.delete(`/blue_admin/groupapp/${data?.groupId}/${data?.appId}`);
+		return api.delete(`/blue_admin/appgroup/${data?.groupId}/${data?.appId}`);
 	},
 
 }
-

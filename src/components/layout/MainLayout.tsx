@@ -58,7 +58,7 @@ export default function MainLayout({
   }, []);
 
   return (
-    <div className="flex bushu flex-row items-stretch bg-gray-50">
+    <div className="flex h-screen flex-row items-stretch bg-gray-50">
         
       <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">

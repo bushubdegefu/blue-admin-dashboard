@@ -1,4 +1,3 @@
-
 import { api } from "./client";
 
 export const jwtsaltService = {
@@ -29,4 +28,3 @@ export const jwtsaltService = {
   },
 
 }
-

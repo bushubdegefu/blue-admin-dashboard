@@ -1,4 +1,3 @@
-
 import { api } from "./client";
 
 export const scopeService = {
@@ -31,7 +30,7 @@ export const scopeService = {
 // Now realationshipQeury Endpoints(Many to Many)
 //###############################################
 	getScopeGroup: (data)=>{
-		return api.get(`/blue_admin/groupscope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+		return api.get(`/blue_admin/scopegroup/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get groups that can be assigned to a group
@@ -44,17 +43,17 @@ export const scopeService = {
 	},
 
 	addGroupScope: (data) => {
-		return api.post(`/blue_admin/groupscope/${data?.groupId}/${data?.scopeId}`);
+		return api.post(`/blue_admin/scopegroup/${data?.groupId}/${data?.scopeId}`);
 	},
 
 	deleteGroupScope: (data) => {
-		return api.delete(`/blue_admin/groupscope/${data?.groupId}/${data?.scopeId}`);
+		return api.delete(`/blue_admin/scopegroup/${data?.groupId}/${data?.scopeId}`);
 	},
 //###############################################
 // Now realationshipQeury Endpoints(Many to Many)
 //###############################################
 	getScopeUser: (data)=>{
-		return api.get(`/blue_admin/userscope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+		return api.get(`/blue_admin/scopeuser/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get users that can be assigned to a user
@@ -67,17 +66,17 @@ export const scopeService = {
 	},
 
 	addUserScope: (data) => {
-		return api.post(`/blue_admin/userscope/${data?.userId}/${data?.scopeId}`);
+		return api.post(`/blue_admin/scopeuser/${data?.userId}/${data?.scopeId}`);
 	},
 
 	deleteUserScope: (data) => {
-		return api.delete(`/blue_admin/userscope/${data?.userId}/${data?.scopeId}`);
+		return api.delete(`/blue_admin/scopeuser/${data?.userId}/${data?.scopeId}`);
 	},
 //###############################################
 // Now realationshipQeury Endpoints(one to Many)
 //###############################################
 	getScopeResource: (data)=>{
-		return api.get(`/blue_admin/resourcescope/${data?.scopeId}`,{ page: data?.page, size: data?.size });
+		return api.get(`/blue_admin/scoperesource/${data?.scopeId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get resources that can be assigned to a resource
@@ -90,12 +89,11 @@ export const scopeService = {
 	},
 
 	addResourceScope: (data) => {
-		return api.post(`/blue_admin/resourcescope/${data?.resourceId}/${data?.scopeId}`);
+		return api.post(`/blue_admin/scoperesource/${data?.resourceId}/${data?.scopeId}`);
 	},
 
 	deleteResourceScope: (data) => {
-		return api.delete(`/blue_admin/resourcescope/${data?.resourceId}/${data?.scopeId}`);
+		return api.delete(`/blue_admin/scoperesource/${data?.resourceId}/${data?.scopeId}`);
 	},
 
 }
-

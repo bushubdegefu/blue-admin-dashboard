@@ -1,4 +1,3 @@
-
 import { api } from "./client";
 
 export const resourceService = {
@@ -29,4 +28,3 @@ export const resourceService = {
   },
 
 }
-

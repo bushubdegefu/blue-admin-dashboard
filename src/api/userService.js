@@ -1,4 +1,3 @@
-
 import { api } from "./client";
 
 export const userService = {
@@ -31,7 +30,7 @@ export const userService = {
 // Now realationshipQeury Endpoints(Many to Many)
 //###############################################
 	getUserGroup: (data)=>{
-		return api.get(`/blue_admin/groupuser/${data?.userId}`,{ page: data?.page, size: data?.size });
+		return api.get(`/blue_admin/usergroup/${data?.userId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get groups that can be assigned to a group
@@ -44,17 +43,17 @@ export const userService = {
 	},
 
 	addGroupUser: (data) => {
-		return api.post(`/blue_admin/groupuser/${data?.groupId}/${data?.userId}`);
+		return api.post(`/blue_admin/usergroup/${data?.groupId}/${data?.userId}`);
 	},
 
 	deleteGroupUser: (data) => {
-		return api.delete(`/blue_admin/groupuser/${data?.groupId}/${data?.userId}`);
+		return api.delete(`/blue_admin/usergroup/${data?.groupId}/${data?.userId}`);
 	},
 //###############################################
 // Now realationshipQeury Endpoints(Many to Many)
 //###############################################
 	getUserScope: (data)=>{
-		return api.get(`/blue_admin/scopeuser/${data?.userId}`,{ page: data?.page, size: data?.size });
+		return api.get(`/blue_admin/userscope/${data?.userId}`,{ page: data?.page, size: data?.size });
 	},
 
 	// Get scopes that can be assigned to a scope
@@ -67,12 +66,11 @@ export const userService = {
 	},
 
 	addScopeUser: (data) => {
-		return api.post(`/blue_admin/scopeuser/${data?.scopeId}/${data?.userId}`);
+		return api.post(`/blue_admin/userscope/${data?.scopeId}/${data?.userId}`);
 	},
 
 	deleteScopeUser: (data) => {
-		return api.delete(`/blue_admin/scopeuser/${data?.scopeId}/${data?.userId}`);
+		return api.delete(`/blue_admin/userscope/${data?.scopeId}/${data?.userId}`);
 	},
 
 }
-
