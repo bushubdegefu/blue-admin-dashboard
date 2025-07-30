@@ -70,9 +70,9 @@ export function EntitySelector({
                     <div className="flex justify-center items-center h-32">
                       <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                     </div>
-                  ) : filteredAvailableItems.length > 0 ? (
+                  ) : filteredAvailableItems?.length > 0 ? (
                     <ul className="space-y-1">
-                      {filteredAvailableItems.map(item => (
+                      {filteredAvailableItems?.map(item => (
                         <li key={item.id}>
                           <Button
                             variant="ghost"
@@ -131,7 +131,7 @@ export function EntitySelector({
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <div className="text-sm text-gray-500">
-          {selectedItems.length} items selected
+          {selectedItems?.length} items selected
         </div>
       </CardFooter>
     </Card>

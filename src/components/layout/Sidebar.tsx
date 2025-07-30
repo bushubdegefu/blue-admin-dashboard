@@ -11,7 +11,8 @@ import {
   LayoutDashboard,
   ChevronRight,
   Menu,
-  X
+  X,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -65,6 +66,7 @@ const Sidebar = () => {
     { icon: Key, label: "Scopes", href: "/admin/scopes" },
     { icon: FolderKey, label: "Resources", href: "/admin/resources" },
     { icon: Layers, label: "Apps", href: "/admin/apps" },
+    { icon: BookOpen, label: "OpenAPI", href: "/admin/swagger" },
   ];
 
   return (

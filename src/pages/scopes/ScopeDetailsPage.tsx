@@ -630,8 +630,8 @@ const ScopeDetailsPage = () => {
           <EntitySelectorUser
             title="Add User"
             description="Choose which user to add to this scope"
-            availableItems={scopeAvailableUsers?.data}
-            selectedItems={scopeAttachedUsers?.data}
+            availableItems={scopeAvailableUsers?.data || []}
+            selectedItems={scopeAttachedUsers?.data || []}
             isLoading={isScopeAvailableUsersLoading}
             onSelect={(user) => handleAddUser(user.id)}
             onRemove={(user) => handleRemoveUser(user.id)}

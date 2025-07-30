@@ -35,6 +35,9 @@ import AppsPage from "./pages/apps/AppsPage";
 import NewAppPage from "./pages/apps/NewAppPage";
 import AppDetailsPage from "./pages/apps/AppDetailsPage";
 
+// Swagger
+import SwaggerPage from "./pages/swagger/swagger";
+
 // Create a new client with updated default options
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +95,10 @@ const App = () => (
                 <Route path="/admin/apps" element={<AppsPage />} />
                 <Route path="/admin/apps/:id" element={<AppDetailsPage />} />
                 <Route path="/admin/apps/new" element={<NewAppPage />} />
+
+                {/* SwaggerPage Routes */}
+                <Route path="/admin/swagger" element={<SwaggerPage />} />
+                
               </Route>
             </Route>
             
