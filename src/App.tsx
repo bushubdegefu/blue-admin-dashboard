@@ -36,7 +36,7 @@ import NewAppPage from "./pages/apps/NewAppPage";
 import AppDetailsPage from "./pages/apps/AppDetailsPage";
 
 // Swagger
-import SwaggerPage from "./pages/swagger/swagger";
+import SwaggerPage from "./pages/swagger/Swagger";
 
 // Create a new client with updated default options
 const queryClient = new QueryClient({

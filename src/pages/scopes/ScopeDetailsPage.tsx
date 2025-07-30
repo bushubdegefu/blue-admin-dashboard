@@ -582,7 +582,7 @@ const ScopeDetailsPage = () => {
         open={isAddResourceDialogOpen}
         onOpenChange={setIsAddResourceDialogOpen}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[75vw] max-w-[75vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Resources to Scope</DialogTitle>
           </DialogHeader>
@@ -604,7 +604,7 @@ const ScopeDetailsPage = () => {
         open={isAddGroupDialogOpen}
         onOpenChange={setIsAddGroupDialogOpen}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[75vw] max-w-[75vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Group to Scope</DialogTitle>
           </DialogHeader>
@@ -623,7 +623,7 @@ const ScopeDetailsPage = () => {
 
       {/* User dialog box */}
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[75vw] max-w-[75vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add User to Scope</DialogTitle>
           </DialogHeader>

@@ -268,7 +268,7 @@ const AppDetailsPage = () => {
         open={isAddGroupDialogOpen}
         onOpenChange={setIsAddGroupDialogOpen}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[70vw] max-w-[70vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Group to Scope</DialogTitle>
           </DialogHeader>

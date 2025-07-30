@@ -467,7 +467,7 @@ const GroupDetailsPage = () => {
       />
 
       <Dialog open={isAddUsersDialogOpen} onOpenChange={setIsAddUsersDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[70vw] max-w-[70vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Users to Group</DialogTitle>
           </DialogHeader>
@@ -485,7 +485,7 @@ const GroupDetailsPage = () => {
       </Dialog>
 
       <Dialog open={isAddScopesDialogOpen} onOpenChange={setIsAddScopesDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="w-[70vw] max-w-[70vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Scopes to Group</DialogTitle>
           </DialogHeader>
